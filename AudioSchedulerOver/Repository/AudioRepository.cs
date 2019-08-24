@@ -1,6 +1,8 @@
-﻿using AudioSchedulerOver.Model;
+﻿using AudioSchedulerOver.DataAccess;
+using AudioSchedulerOver.Model;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,38 +11,42 @@ namespace AudioSchedulerOver.Repository
 {
     public interface IAudioRepository
     {
-        Audio GetLast();
-
         IEnumerable<Audio> GetAll();
 
-        void Add(Audio audio);
+        Task AddAsync(Audio audio);
+
+        Task RemoveAsync(Audio audio);
     }
     class AudioRepository : IAudioRepository
     {
-        private static List<Audio> _audios = new List<Audio>();
+        private readonly Context _context;
 
-        public AudioRepository()
+        public AudioRepository(Context context)
         {
-            _audios.Add(new Audio()
-            {
-                Name = "Track 1",
-                FilePath = @"C:\Users\fnkta\Music\justin_hurwitz_ryan_gosling_emma_stone_-_city_of_stars_may_finally_come_true_score_saundtrek_iz_filma_la_la_lend_la_la_land_(zf.fm).mp3"
-            });
+            _context = context;
         }
 
-        public void Add(Audio audio)
+        public async Task AddAsync(Audio audio)
         {
-            _audios.Add(audio);
+            _context.Audios.Add(audio);
+
+            await _context.SaveChangesAsync();
         }
 
         public IEnumerable<Audio> GetAll()
         {
-            return _audios;
+            return _context.Audios.ToList();
         }
 
-        public Audio GetLast()
+        public async Task RemoveAsync(Audio audio)
         {
-            return _audios.LastOrDefault();
+            var dbEntry = _context.Audios.Find(audio.Id);
+            if(dbEntry != null)
+            {
+                _context.Entry(dbEntry).State = EntityState.Deleted;
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

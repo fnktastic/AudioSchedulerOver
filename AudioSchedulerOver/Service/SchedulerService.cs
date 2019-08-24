@@ -11,17 +11,22 @@ namespace AudioSchedulerOver.Service
     public class SchedulerService
     {
         private static SchedulerService _instance;
-        private readonly List<Timer> _timers = new List<Timer>();
+        private readonly Dictionary<Guid, Timer> _timers = new Dictionary<Guid, Timer>();
 
         private SchedulerService() { }
 
         public static SchedulerService Instance => _instance ?? (_instance = new SchedulerService());
 
-        public void ScheduleTask(int hour, int min, double intervalInHour, Action task)
+        public void ScheduleTask(double intervalInHour, Action task, Guid scheduleId, DateTime? startAt = null)
         {
             DateTime now = DateTime.Now;
-            DateTime firstRun = new DateTime(now.Year, now.Month, now.Day, hour, min, 0, 0);
-            if (now > firstRun)
+
+            if(startAt.HasValue == false)
+                startAt = DateTime.Now;
+
+            DateTime firstRun = new DateTime(startAt.Value.Year, startAt.Value.Month, startAt.Value.Day, startAt.Value.Hour, startAt.Value.Minute, startAt.Value.Second, startAt.Value.Millisecond);
+
+            if (startAt > firstRun)
             {
                 firstRun = firstRun.AddDays(1);
             }
@@ -37,7 +42,19 @@ namespace AudioSchedulerOver.Service
                 task.Invoke();
             }, null, timeToGo, TimeSpan.FromHours(intervalInHour));
 
-            _timers.Add(timer);
+            _timers.Add(scheduleId, timer);
+        }
+
+        public void KillSchedule(Guid scheduleId)
+        {
+            if(_timers.ContainsKey(scheduleId))
+            {
+                var timer = _timers[scheduleId];
+
+                timer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                _timers.Remove(scheduleId);
+            }
         }
     }
 }

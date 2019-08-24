@@ -1,4 +1,5 @@
 ﻿using AudioSchedulerOver.Model;
+using AudioSession;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,11 +13,15 @@ namespace AudioSchedulerOver.Service
     {
         private readonly MediaPlayer _mediaPlayer;
 
+        public static ApplicationVolumeProvider ApplicationVolumeProvider;
+
         public PlayerService(MediaPlayer mediaPlayer)
         {
             _mediaPlayer = mediaPlayer;
 
             _mediaPlayer.Volume = 50;
+
+            _mediaPlayer.MediaEnded += _mediaPlayer_MediaEnded;
         }
 
         private void Close()
@@ -54,6 +59,12 @@ namespace AudioSchedulerOver.Service
         public void Pause()
         {
             _mediaPlayer.Pause();
+        }
+
+        private void _mediaPlayer_MediaEnded(object sender, EventArgs e)
+        {
+            if (ApplicationVolumeProvider != null)
+                ApplicationVolumeProvider.SetApplicationVolume(100);
         }
     }
 }

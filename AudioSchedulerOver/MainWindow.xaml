@@ -8,10 +8,27 @@
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:local="clr-namespace:AudioSchedulerOver"
         xmlns:viewModel="clr-namespace:AudioSchedulerOver.ViewModel"
+        xmlns:enum="clr-namespace:AudioSchedulerOver.Enum"
         xmlns:model="clr-namespace:AudioSchedulerOver.Model"
+        xmlns:converter="clr-namespace:AudioSchedulerOver.Converters"          
         mc:Ignorable="d"
         DataContext="{Binding Main, Source={StaticResource Locator}}"
         Title="Audio Scheduler" Height="450" Width="1025">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <cmd:EventToCommand Command="{Binding OnAppCloseCommand}" PassEventArgsToCommand="True" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Controls:MetroWindow.Resources>
+        <ObjectDataProvider x:Key="intervalEnum" MethodName="GetValues" ObjectType="{x:Type enum:IntervalEnum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enum:IntervalEnum"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+        <converter:BoolToVisibleOrCollapsed x:Key="BoolToVisibleOrCollapsed" />
+        <converter:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+    </Controls:MetroWindow.Resources>
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="275" />
@@ -46,8 +63,9 @@
                         <Button Grid.Column="1" Grid.Row="0" Content="Play" CommandParameter="{Binding}" Command="{Binding DataContext.PeviewAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
                         <Grid.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Add" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.AddAudioToScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
                                 <MenuItem Header="Play" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.PeviewAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
+                                <MenuItem Header="Add" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.AddAudioToScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
+                                <MenuItem Header="Remove" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.RemoveAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
                             </ContextMenu>
                         </Grid.ContextMenu>
                     </Grid>
@@ -68,26 +86,35 @@
                         </Grid.RowDefinitions>
                         <StackPanel Grid.Column="0" Grid.Row="0">
                             <TextBlock Text="{Binding Audio.Name}" Height="25" FontSize="18" FontWeight="SemiBold" ToolTip="{Binding Audio.Name}" TextTrimming="WordEllipsis" VerticalAlignment="Top" />
-                            <TextBlock Text="{Binding Audio.FilePath}" Height="25" FontSize="12" FontWeight="Light" ToolTip="{Binding Audio.FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
+                            <TextBlock Text="{Binding Audio.FilePath}" Height="15" FontSize="12" FontWeight="Light" ToolTip="{Binding Audio.FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
+                            <Label Foreground="Green" HorizontalAlignment="Left" HorizontalContentAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Top">
+                                <Label.Style>
+                                    <Style TargetType="{x:Type Label}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Value="True">
+                                                <Setter Property="Content" Value="active"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Value="False">
+                                                <Setter Property="Content" Value="stopped"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Label.Style>   
+                            </Label>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Grid.Row="0">
                             <WrapPanel Height="30" Orientation="Horizontal" VerticalAlignment="Top">
                                 <TextBlock Text="Start at" VerticalAlignment="Center" />
-                                <Controls:DateTimePicker Margin="5 0" VerticalAlignment="Center" Width="175" />
+                                <Controls:DateTimePicker SelectedDate="{Binding StartDate, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"  Margin="5 0" VerticalAlignment="Center" Width="175" />
                             </WrapPanel>
                             <WrapPanel Height="30" Orientation="Horizontal" VerticalAlignment="Bottom" >
                                 <TextBlock Margin="0 0 5 0" Text="repeat every" VerticalAlignment="Center" />
-                                <TextBox Margin="5 0" Width="30"/>
-                                <ComboBox Margin="5 0" SelectedItem="{Binding SelectedInterval}">
-                                    <ComboBoxItem Content="second " IsSelected="True" Tag="0" />
-                                    <ComboBoxItem Content="minute" Tag="1" />
-                                    <ComboBoxItem Content="hour" Tag="2" />
-                                    <ComboBoxItem Content="day"  Tag="3"/>
-                                </ComboBox>
+                                <TextBox Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Margin="5 0" Width="30"/>
+                                <ComboBox ItemsSource="{Binding Source={StaticResource intervalEnum}}" Margin="5 0" SelectedItem="{Binding IntervalEnum, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
                             </WrapPanel>
                         </StackPanel>
-  
-                        <Button Grid.Column="2" Grid.Row="0" Content="Start" CommandParameter="{Binding}" Command="{Binding DataContext.StartScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
+                        <Button Grid.Column="2" Grid.Row="0" Content="Start" Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVisibilityConverter}}" CommandParameter="{Binding}" Command="{Binding DataContext.StartScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
+                        <Button Grid.Column="2" Grid.Row="0" Content="Stop" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibleOrCollapsed}}" CommandParameter="{Binding}" Command="{Binding DataContext.StopScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
                         <Grid.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Remove" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.RemoveScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
@@ -106,7 +133,7 @@
             <TextBlock Text="{Binding ErrorMessage}" TextAlignment="Center" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Center" />
             <TextBlock Text="{Binding SuccessMessage}" TextAlignment="Center" TextWrapping="Wrap" Foreground="Green"  HorizontalAlignment="Center" />
 
-            <TextBlock Text="New Volume" Margin="0 10 0 0" />
+            <TextBlock Text="Master Volume" Margin="0 10 0 0" />
             <WrapPanel>
                 <Slider Width="205" Minimum="0" Maximum="100"  Value="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
                 <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="15 0 0 0" Width="30" Text="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />

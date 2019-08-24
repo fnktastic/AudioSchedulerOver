@@ -1,4 +1,5 @@
-﻿using AudioSchedulerOver.Service;
+﻿using AudioSchedulerOver.Enum;
+using AudioSchedulerOver.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,27 +11,30 @@ namespace AudioSchedulerOver.Scheduler
 {
     public class AudioPlaybackScheduler
     {
-        public void IntervalInSeconds(int hour, int sec, double interval, Action task)
+        public void Interval(double interval, Action task, IntervalEnum intervalEnum, Guid scheduleId, DateTime? startAt = null)
         {
-            interval = interval / 3600;
-            SchedulerService.Instance.ScheduleTask(hour, sec, interval, task);
+            switch (intervalEnum)
+            {
+                case IntervalEnum.Day:
+                    interval = interval * 24;
+                    break;
+                case IntervalEnum.Hour:
+
+                    break;
+                case IntervalEnum.Minute:
+                    interval = interval / 60;
+                    break;
+                case IntervalEnum.Second:
+                    interval = interval / 3600;
+                    break;
+            }
+
+            SchedulerService.Instance.ScheduleTask(interval, task, scheduleId, startAt);
         }
 
-        public void IntervalInMinutes(int hour, int min, double interval, Action task)
+        public void KillSchedule(Guid scheduleId)
         {
-            interval = interval / 60;
-            SchedulerService.Instance.ScheduleTask(hour, min, interval, task);
-        }
-
-        public void IntervalInHours(int hour, int min, double interval, Action task)
-        {
-            SchedulerService.Instance.ScheduleTask(hour, min, interval, task);
-        }
-
-        public void IntervalInDays(int hour, int min, double interval, Action task)
-        {
-            interval = interval * 24;
-            SchedulerService.Instance.ScheduleTask(hour, min, interval, task);
+            SchedulerService.Instance.KillSchedule(scheduleId);
         }
     }
 }

@@ -9,6 +9,7 @@ namespace AudioSchedulerOver.Model
 {
     public class Audio
     {
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public string FilePath { get; set; }
 
