@@ -28,6 +28,8 @@ namespace AudioSchedulerOver.ViewModel
 
         private const string APP = "Y.Music";
 
+        private bool isConnectSuccess;
+
         private ObservableCollection<Audio> _audios;
         public ObservableCollection<Audio> Audios
         {
@@ -132,9 +134,9 @@ namespace AudioSchedulerOver.ViewModel
                 {
                     var audio = Audio.CreateInstnceFromPath(file);
 
-                    Audios.Add(audio);
-
                     await _audioRepository.AddAsync(audio);
+
+                    Audios.Add(audio);
                 }
             }
         }
@@ -152,11 +154,13 @@ namespace AudioSchedulerOver.ViewModel
                 float? appVolume = _applicationVolumeProvider.GetApplicationVolume();
                 SuccessMessage = string.Format("App {0} is detected", _appName);
                 ErrorMessage = string.Empty;
+                isConnectSuccess = true;
             }
             else
             {
                 ErrorMessage = "Cant find the target app by given name. Check exact name of the app and try again.";
                 SuccessMessage = string.Empty;
+                isConnectSuccess = false;
             }
         }
 
@@ -183,7 +187,7 @@ namespace AudioSchedulerOver.ViewModel
             ScheduleViewModels.Add(new ScheduleViewModel()
             {
                 Audio = audio,
-                ScheduleId = new Guid(),
+                ScheduleId = Guid.NewGuid(),
                 Interval = 0,
                 IntervalEnum = IntervalEnum.Second,
                 StartDate = DateTime.Now
@@ -194,6 +198,12 @@ namespace AudioSchedulerOver.ViewModel
         public RelayCommand<ScheduleViewModel> StartScheduledPlaybackCommand => _startScheduledPlaybackCommand ?? (_startScheduledPlaybackCommand = new RelayCommand<ScheduleViewModel>(StartScheduledPlayback));
         private void StartScheduledPlayback(ScheduleViewModel scheduleViewModel)
         {
+            if (isConnectSuccess == false)
+            {
+                ErrorMessage = "Error. Connect to the media player first.";
+                return;
+            }
+
             Audio audio = scheduleViewModel.Audio;
             DateTime start = scheduleViewModel.StartDate;
             int interval = scheduleViewModel.Interval;

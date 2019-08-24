@@ -16,16 +16,15 @@ namespace AudioSchedulerOver.Scheduler
             switch (intervalEnum)
             {
                 case IntervalEnum.Day:
-                    interval = interval * 24;
+                    interval *= 24;
                     break;
                 case IntervalEnum.Hour:
-
                     break;
                 case IntervalEnum.Minute:
-                    interval = interval / 60;
+                    interval /= 60;
                     break;
                 case IntervalEnum.Second:
-                    interval = interval / 3600;
+                    interval /= 3600;
                     break;
             }
 

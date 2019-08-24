@@ -18,7 +18,8 @@ namespace AudioSchedulerOver.Model
             return new Audio()
             {
                 FilePath = filePath,
-                Name = Path.GetFileName(filePath)
+                Name = Path.GetFileName(filePath),
+                Id = Guid.NewGuid()
             };
         }
     }
