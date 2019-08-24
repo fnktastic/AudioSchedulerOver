@@ -38,7 +38,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <ListView Margin="5 0" Grid.Row="0" Grid.Column="0"
+        <ListView Padding="0 5" Margin="5 0" Grid.Row="0" Grid.Column="0"
                   AllowDrop="True"
                   ItemsSource="{Binding Audios}">
             <i:Interaction.Triggers>
@@ -72,13 +72,13 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <ListView Margin="5 0" Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ScheduleViewModels}">
+        <ListView Padding="0 5" Margin="5 0" Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ScheduleViewModels}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Grid Margin="0 5" Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type Controls:MetroWindow}}}">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="150" />
+                            <ColumnDefinition Width="225" />
                             <ColumnDefinition Width="50" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
@@ -99,7 +99,7 @@
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Label.Style>   
+                                </Label.Style>
                             </Label>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Grid.Row="0">
@@ -109,8 +109,8 @@
                             </WrapPanel>
                             <WrapPanel Height="30" Orientation="Horizontal" VerticalAlignment="Bottom" >
                                 <TextBlock Margin="0 0 5 0" Text="repeat every" VerticalAlignment="Center" />
-                                <TextBox Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Margin="5 0" Width="30"/>
-                                <ComboBox ItemsSource="{Binding Source={StaticResource intervalEnum}}" Margin="5 0" SelectedItem="{Binding IntervalEnum, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                                <TextBox Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5 0" Width="30"/>
+                                <ComboBox ItemsSource="{Binding Source={StaticResource intervalEnum}}" Margin="5 0" Width="103" SelectedItem="{Binding IntervalEnum, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
                             </WrapPanel>
                         </StackPanel>
                         <Button Grid.Column="2" Grid.Row="0" Content="Start" Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVisibilityConverter}}" CommandParameter="{Binding}" Command="{Binding DataContext.StartScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
