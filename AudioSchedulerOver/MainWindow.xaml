@@ -13,7 +13,7 @@
         xmlns:converter="clr-namespace:AudioSchedulerOver.Converters"          
         mc:Ignorable="d"
         DataContext="{Binding Main, Source={StaticResource Locator}}"
-        Title="Audio Scheduler" Height="450" Width="1100">
+        Title="Audio Scheduler | 0.2.1" Height="450" Width="1100">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <cmd:EventToCommand Command="{Binding OnAppCloseCommand}" PassEventArgsToCommand="True" />
