@@ -140,7 +140,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 EstablishConnection();
 
-            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5000));
+            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
         }
 
         private RelayCommand<DragEventArgs> _dropAudioCommand;
