@@ -14,6 +14,8 @@ namespace AudioSchedulerOver.Model
 
         public IntervalEnum IntervalEnum { get; set; }
 
+        public DayEnum DayEnum { get; set; }
+
         public int Interval { get; set; }
 
         public DateTime StartDate { get; set; }
@@ -28,7 +30,8 @@ namespace AudioSchedulerOver.Model
                 Interval = this.Interval,
                 IntervalEnum = this.IntervalEnum,
                 ScheduleId = this.Id,
-                StartDate = this.StartDate
+                StartDate = this.StartDate,
+                DayEnum = this.DayEnum
             };
         }
     }

@@ -26,6 +26,17 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
+        private DayEnum _dayEnum;
+        public DayEnum DayEnum
+        {
+            get { return _dayEnum; }
+            set
+            {
+                _dayEnum = value;
+                RaisePropertyChanged(nameof(DayEnum));
+            }
+        }
+
         private int _interval;
         public int Interval
         {
@@ -67,7 +78,8 @@ namespace AudioSchedulerOver.ViewModel
                 Id = this.ScheduleId,
                 Interval = this.Interval,
                 IntervalEnum = this.IntervalEnum,
-                StartDate = this.StartDate
+                StartDate = this.StartDate,
+                DayEnum = this.DayEnum
             };
         }
     }

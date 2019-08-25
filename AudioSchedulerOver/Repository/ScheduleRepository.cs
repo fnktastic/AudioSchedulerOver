@@ -61,6 +61,7 @@ namespace AudioSchedulerOver.Repository
                 dbEntry.Interval = schedule.Interval;
                 dbEntry.IntervalEnum = schedule.IntervalEnum;
                 dbEntry.StartDate = schedule.StartDate;
+                dbEntry.DayEnum = schedule.DayEnum;
 
                 await _context.SaveChangesAsync();
             }
