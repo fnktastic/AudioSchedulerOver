@@ -67,12 +67,17 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.OracleClient" />
     <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net462\System.Windows.Interactivity.dll</HintPath>
     </Reference>
@@ -99,7 +104,11 @@
     <Compile Include="DataAccess\DataContext.cs" />
     <Compile Include="Enum\IntervalEnum.cs" />
     <Compile Include="Model\Audio.cs" />
+    <Compile Include="Model\Schedule.cs" />
+    <Compile Include="Model\Setting.cs" />
     <Compile Include="Repository\AudioRepository.cs" />
+    <Compile Include="Repository\ScheduleRepository.cs" />
+    <Compile Include="Repository\SettingRepository.cs" />
     <Compile Include="Scheduler\AudioPlaybackScheduler.cs" />
     <Compile Include="Service\PlayerService.cs" />
     <Compile Include="Service\SchedulerService.cs" />

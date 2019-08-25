@@ -13,7 +13,7 @@
         xmlns:converter="clr-namespace:AudioSchedulerOver.Converters"          
         mc:Ignorable="d"
         DataContext="{Binding Main, Source={StaticResource Locator}}"
-        Title="Audio Scheduler | 0.2.1" Height="450" Width="1100">
+        Title="Audio Scheduler | 0.2.8" Height="450" Width="1100">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <cmd:EventToCommand Command="{Binding OnAppCloseCommand}" PassEventArgsToCommand="True" />
@@ -120,6 +120,7 @@
                             <Button Grid.Column="2" Grid.Row="0" Content="Stop" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibleOrCollapsed}}" CommandParameter="{Binding}" Command="{Binding DataContext.StopScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
                             <Grid.ContextMenu>
                                 <ContextMenu>
+                                    <MenuItem Header="Save" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.SaveScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
                                     <MenuItem Header="Remove" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.RemoveScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
                                     <MenuItem Header="Play" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.PlayScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
                                 </ContextMenu>
@@ -134,7 +135,6 @@
             <StackPanel>
                 <TextBlock Text="Target Music Player Name" />
                 <TextBox Text="{Binding AppName, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Content="OK" Margin="15" Command="{Binding ConnectToAppCommnd}"/>
 
                 <TextBlock Text="{Binding SuccessMessage}" TextAlignment="Center" TextWrapping="Wrap" Foreground="Green"  HorizontalAlignment="Center" />
                 <TextBlock Text="{Binding ErrorMessage}" TextAlignment="Center" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Center" />
@@ -144,6 +144,8 @@
                     <Slider Width="205" Minimum="0" Maximum="100"  Value="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
                     <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="15 0 0 0" Width="30" Text="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
                 </WrapPanel>
+                <Button Content="Connect" Margin="15" Command="{Binding ConnectToAppCommnd}"/>
+                <Button Visibility="Hidden" VerticalAlignment="Bottom" Content="Save app name and volume" Margin="15" Command="{Binding SaveCommandCommnd}"/>
             </StackPanel>
         </GroupBox>
     </Grid>

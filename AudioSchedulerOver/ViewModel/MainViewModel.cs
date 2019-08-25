@@ -9,7 +9,10 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -23,12 +26,16 @@ namespace AudioSchedulerOver.ViewModel
         private readonly PlayerService _playerService;
         private readonly AudioPlaybackScheduler _audioPlaybackScheduler;
         private readonly IAudioRepository _audioRepository;
+        private readonly IScheduleRepository _scheduleRepository;
+        private readonly ISettingRepository _settingRepository;
 
         private ApplicationVolumeProvider _applicationVolumeProvider;
 
         private const string APP = "Y.Music";
 
         private bool isConnectSuccess;
+
+        private Timer connectionTimer;
 
         private ObservableCollection<Audio> _audios;
         public ObservableCollection<Audio> Audios
@@ -111,14 +118,29 @@ namespace AudioSchedulerOver.ViewModel
         {
             _context = new Context();
             _audioRepository = new AudioRepository(_context);
+            _scheduleRepository = new ScheduleRepository(_context);
+            _settingRepository = new SettingRepository(_context);
+            _settingRepository.Init();
 
             var mediaPlayer = new MediaPlayer();
             _audioPlaybackScheduler = new AudioPlaybackScheduler();
             _playerService = new PlayerService(mediaPlayer);
             Audios = new ObservableCollection<Audio>(_audioRepository.GetAll());
-            ScheduleViewModels = new ObservableCollection<ScheduleViewModel>();
+            ScheduleViewModels = new ObservableCollection<ScheduleViewModel>
+                (
+                _scheduleRepository
+                .GetAll()
+                .Select(x => x.ConvertToScheduleViewModel())
+                );
 
-            TargetVolunme = 100;
+            TargetVolunme = int.Parse(GetSetting("tagetVolume"));
+            AppName = GetSetting("appName");
+
+            connectionTimer = new Timer(x =>
+            {
+                EstablishConnection();
+
+            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5000));
         }
 
         private RelayCommand<DragEventArgs> _dropAudioCommand;
@@ -145,23 +167,9 @@ namespace AudioSchedulerOver.ViewModel
         public RelayCommand ConnectToAppCommnd => _connectToAppCommnd ?? (_connectToAppCommnd = new RelayCommand(ConnectToApp));
         private void ConnectToApp()
         {
-            _applicationVolumeProvider = new ApplicationVolumeProvider(_appName);
+            EstablishConnection();
 
-            PlayerService.ApplicationVolumeProvider = _applicationVolumeProvider;
-
-            if (_applicationVolumeProvider.IsConnected)
-            {
-                float? appVolume = _applicationVolumeProvider.GetApplicationVolume();
-                SuccessMessage = string.Format("App {0} is detected", _appName);
-                ErrorMessage = string.Empty;
-                isConnectSuccess = true;
-            }
-            else
-            {
-                ErrorMessage = "Cant find the target app by given name. Check exact name of the app and try again.";
-                SuccessMessage = string.Empty;
-                isConnectSuccess = false;
-            }
+            UpdateConfigs();
         }
 
         private RelayCommand<Audio> _peviewAudioCommand;
@@ -170,7 +178,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             _playerService.OpenAndPlay(audio);
         }
-          
+
         private RelayCommand<Audio> _removeAudioCommand;
         public RelayCommand<Audio> RemoveAudioCommand => _removeAudioCommand ?? (_removeAudioCommand = new RelayCommand<Audio>(RemoveAudio));
         private async void RemoveAudio(Audio audio)
@@ -182,21 +190,25 @@ namespace AudioSchedulerOver.ViewModel
 
         private RelayCommand<Audio> _addAudioToScheduleCommand;
         public RelayCommand<Audio> AddAudioToScheduleCommand => _addAudioToScheduleCommand ?? (_addAudioToScheduleCommand = new RelayCommand<Audio>(AddAudioToSchedule));
-        private void AddAudioToSchedule(Audio audio)
+        private async void AddAudioToSchedule(Audio audio)
         {
-            ScheduleViewModels.Add(new ScheduleViewModel()
+            var scheduleViewModel = new ScheduleViewModel()
             {
                 Audio = audio,
                 ScheduleId = Guid.NewGuid(),
                 Interval = 0,
                 IntervalEnum = IntervalEnum.Second,
                 StartDate = DateTime.Now
-            });
+            };
+
+            ScheduleViewModels.Add(scheduleViewModel);
+
+            await _scheduleRepository.AddAsync(scheduleViewModel.ConvertToSchedule());
         }
 
         private RelayCommand<ScheduleViewModel> _startScheduledPlaybackCommand;
         public RelayCommand<ScheduleViewModel> StartScheduledPlaybackCommand => _startScheduledPlaybackCommand ?? (_startScheduledPlaybackCommand = new RelayCommand<ScheduleViewModel>(StartScheduledPlayback));
-        private void StartScheduledPlayback(ScheduleViewModel scheduleViewModel)
+        private async void StartScheduledPlayback(ScheduleViewModel scheduleViewModel)
         {
             if (isConnectSuccess == false)
             {
@@ -220,6 +232,8 @@ namespace AudioSchedulerOver.ViewModel
             }, intervalEnum, scheduleId, start);
 
             scheduleViewModel.IsActive = true;
+
+            await _scheduleRepository.UpdateAsync(scheduleViewModel.ConvertToSchedule());
         }
 
         private RelayCommand<ScheduleViewModel> _stopScheduledPlaybackCommand;
@@ -242,9 +256,18 @@ namespace AudioSchedulerOver.ViewModel
 
         private RelayCommand<ScheduleViewModel> _removeScheduleCommand;
         public RelayCommand<ScheduleViewModel> RemoveScheduleCommand => _removeScheduleCommand ?? (_removeScheduleCommand = new RelayCommand<ScheduleViewModel>(RemoveSchedule));
-        private void RemoveSchedule(ScheduleViewModel scheduleViewModel)
+        private async void RemoveSchedule(ScheduleViewModel scheduleViewModel)
         {
             ScheduleViewModels.Remove(scheduleViewModel);
+
+            await _scheduleRepository.RemoveAsync(scheduleViewModel.ConvertToSchedule());
+        }
+
+        private RelayCommand<ScheduleViewModel> _saveScheduleCommand;
+        public RelayCommand<ScheduleViewModel> SaveScheduleCommand => _saveScheduleCommand ?? (_saveScheduleCommand = new RelayCommand<ScheduleViewModel>(SaveSchedule));
+        private async void SaveSchedule(ScheduleViewModel scheduleViewModel)
+        {
+            await _scheduleRepository.UpdateAsync(scheduleViewModel.ConvertToSchedule());
         }
 
         private RelayCommand<object> _onAppCloseCommand;
@@ -253,6 +276,138 @@ namespace AudioSchedulerOver.ViewModel
         {
             if (_applicationVolumeProvider != null)
                 _applicationVolumeProvider.SetApplicationVolume(100);
+        }
+
+        private RelayCommand<object> _saveCommandCommnd;
+        public RelayCommand<object> SaveCommandCommnd => _saveCommandCommnd ?? (_saveCommandCommnd = new RelayCommand<object>(SaveCommand));
+        private void SaveCommand(object e)
+        {
+
+        }
+
+        private void UpdateConfigs()
+        {
+            UpdateSetting("appName", _appName);
+            UpdateSetting("tagetVolume", _targetVolume.ToString());
+        }
+
+        private void UpdateSetting(string key, string value)
+        {
+            _settingRepository.Update(key, value);
+        }
+
+        private string GetSetting(string key)
+        {
+            return _settingRepository.Get(key).Value;
+        }
+
+        private bool EstablishConnection()
+        {
+            UpdateConfigs();
+
+            if (IsProcessExist(_appName) == false)
+            {
+                ErrorMessage = "Cant find the target app by given name. Check exact name of the app and try again.";
+                SuccessMessage = string.Empty;
+                isConnectSuccess = false;
+
+                return false;
+            }
+
+            _applicationVolumeProvider = new ApplicationVolumeProvider(_appName);
+
+            PlayerService.ApplicationVolumeProvider = _applicationVolumeProvider;
+
+            if (_applicationVolumeProvider.IsConnected)
+            {
+                float? appVolume = _applicationVolumeProvider.GetApplicationVolume();
+                SuccessMessage = string.Format("App {0} is detected", _appName);
+                ErrorMessage = string.Empty;
+                isConnectSuccess = true;
+
+                foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == false))
+                {
+                    var d = scheduleViewModel.StartDate;
+                    var i = scheduleViewModel.Interval;
+                    DateTime fakeStartDateTime = DateTime.Now;
+
+                    switch (scheduleViewModel.IntervalEnum)
+                    {
+                        case IntervalEnum.Day:
+                            fakeStartDateTime = new DateTime
+                                (
+                                DateTime.Now.Year,
+                                DateTime.Now.Month,
+                                d.Day + i,
+                                d.Hour,
+                                d.Minute,
+                                d.Second,
+                                d.Millisecond
+                                );
+                            break;
+                        case IntervalEnum.Hour:
+                            fakeStartDateTime = new DateTime
+                              (
+                                DateTime.Now.Year,
+                                DateTime.Now.Month,
+                                DateTime.Now.Day,
+                                d.Hour + i,
+                                d.Minute,
+                                d.Second,
+                                d.Millisecond
+                                );
+                            break;
+                        case IntervalEnum.Minute:
+                            fakeStartDateTime = new DateTime
+                                (
+                                DateTime.Now.Year,
+                                DateTime.Now.Month,
+                                DateTime.Now.Day,
+                                DateTime.Now.Hour,
+                                d.Minute + i,
+                                d.Second,
+                                d.Millisecond
+                                );
+                            break;
+                        case IntervalEnum.Second:
+                            fakeStartDateTime = new DateTime
+                                (
+                                DateTime.Now.Year,
+                                DateTime.Now.Month,
+                                DateTime.Now.Day,
+                                DateTime.Now.Hour,
+                                DateTime.Now.Minute,
+                                d.Second + i,
+                                d.Millisecond
+                                );
+                            break;                          
+                    }
+
+                    scheduleViewModel.StartDate = fakeStartDateTime;
+                    StartScheduledPlayback(scheduleViewModel);
+                }
+
+                return true;
+            }
+            else
+            {
+                ErrorMessage = "Cant find the target app by given name. Check exact name of the app and try again.";
+                SuccessMessage = string.Empty;
+                isConnectSuccess = false;
+
+                return false;
+            }
+
+        }
+
+        private bool IsProcessExist(string processName)
+        {
+            var process = Process.GetProcesses().FirstOrDefault(x => x.ProcessName == processName);
+
+            if (process == null)
+                return false;
+
+            return true;
         }
     }
 }

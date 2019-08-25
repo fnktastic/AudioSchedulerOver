@@ -12,10 +12,12 @@ namespace AudioSchedulerOver.DataAccess
     {
         public Context() : base("AudioSchedulerOverDB")
         {
-
         }
 
         public DbSet<Audio> Audios { get; set; }
+
+        public DbSet<Schedule> Schedules { get; set; }
+        public DbSet<Setting> Settings { get; set; }
     }
 
     public class DataInitializer : DropCreateDatabaseIfModelChanges<Context>

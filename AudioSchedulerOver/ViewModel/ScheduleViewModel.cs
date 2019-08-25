@@ -58,5 +58,17 @@ namespace AudioSchedulerOver.ViewModel
                 RaisePropertyChanged(nameof(IsActive)); 
             }
         }
+
+        public Schedule ConvertToSchedule()
+        {
+            return new Schedule()
+            {
+                Audio = this.Audio,
+                Id = this.ScheduleId,
+                Interval = this.Interval,
+                IntervalEnum = this.IntervalEnum,
+                StartDate = this.StartDate
+            };
+        }
     }
 }
