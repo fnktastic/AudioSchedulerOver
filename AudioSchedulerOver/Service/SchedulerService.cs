@@ -18,8 +18,36 @@ namespace AudioSchedulerOver.Service
 
         public static SchedulerService Instance => _instance ?? (_instance = new SchedulerService());
 
+        static DateTime GetNextWeekday(DayOfWeek day, int extraDay = 1)
+        {
+            DateTime result = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day + extraDay, 0, 0, 0);
+            while (result.DayOfWeek != day)
+                result = result.AddDays(1);
+            return result;
+        }
+
         public void ScheduleTask(double intervalInHour, Action task, Guid scheduleId, DayEnum dayEnum, TimeSpan? startAt = null)
         {
+            var targetDate = GetNextWeekday((DayOfWeek)dayEnum);
+
+            targetDate = targetDate.Add(startAt.Value);
+            
+            if(targetDate > DateTime.Now && DateTime.Now.DayOfWeek == (DayOfWeek) dayEnum)
+            {
+                targetDate = GetNextWeekday((DayOfWeek)dayEnum, 0);
+
+                targetDate = targetDate.Add(startAt.Value);
+            }
+
+            var timeToGo = targetDate - DateTime.Now;
+
+            var timer = new Timer(x =>
+            {
+                task.Invoke();
+            }, null, timeToGo, TimeSpan.FromHours(intervalInHour));
+
+            _timers.Add(scheduleId, timer);
+
             /*DateTime now = DateTime.Now;
 
             if(startAt.HasValue == false)
