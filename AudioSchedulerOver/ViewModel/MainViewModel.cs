@@ -279,6 +279,8 @@ namespace AudioSchedulerOver.ViewModel
         {
             if (_applicationVolumeProvider != null)
                 _applicationVolumeProvider.SetApplicationVolume(100);
+
+            UpdateConfigs();
         }
 
         private RelayCommand<object> _saveCommandCommnd;
