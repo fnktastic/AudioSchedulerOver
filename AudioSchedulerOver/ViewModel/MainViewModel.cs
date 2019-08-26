@@ -35,7 +35,9 @@ namespace AudioSchedulerOver.ViewModel
 
         private bool isConnectSuccess;
 
-        private Timer connectionTimer;
+        private bool isAutoRunFired = false;
+
+        private readonly Timer connectionTimer;
 
         private ObservableCollection<Audio> _audios;
         public ObservableCollection<Audio> Audios
@@ -230,7 +232,7 @@ namespace AudioSchedulerOver.ViewModel
                     _applicationVolumeProvider.SetApplicationVolume(_targetVolume);
                     _playerService.OpenAndPlay(audio);
                 }));
-            }, intervalEnum, scheduleId, dayEnum , start);
+            }, intervalEnum, scheduleId, dayEnum, start);
 
             scheduleViewModel.IsActive = true;
 
@@ -326,10 +328,16 @@ namespace AudioSchedulerOver.ViewModel
                 ErrorMessage = string.Empty;
                 isConnectSuccess = true;
 
-                foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == false))
+                if (isAutoRunFired == false)
                 {
-                    StartScheduledPlayback(scheduleViewModel);
+                    foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == false))
+                    {
+                        StartScheduledPlayback(scheduleViewModel);
+                    }
+
+                    isAutoRunFired = true;
                 }
+
 
                 return true;
             }
@@ -343,7 +351,6 @@ namespace AudioSchedulerOver.ViewModel
             }
 
         }
-
         private bool IsProcessExist(string processName)
         {
             var process = Process.GetProcesses().FirstOrDefault(x => x.ProcessName == processName);
