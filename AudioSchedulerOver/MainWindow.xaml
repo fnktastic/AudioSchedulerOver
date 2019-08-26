@@ -115,7 +115,7 @@
                                     <TextBlock Text="Start in" VerticalAlignment="Center" />
                                     <ComboBox ItemsSource="{Binding Source={StaticResource dayEnum}}" Margin="5 0" Width="125" SelectedItem="{Binding DayEnum, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
                                     <TextBlock Text=" at " VerticalAlignment="Center" />
-                                    <Controls:TimePicker SelectedTime="{Binding StartDate, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"  Margin="5 0" VerticalAlignment="Center" Width="125" />
+                                    <Controls:TimePicker SelectedTimeFormat="Long" Culture="ru-UA" SelectedTime="{Binding StartDate, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Margin="5 0" VerticalAlignment="Center" Width="125" />
                                 </WrapPanel>
                                 <WrapPanel Height="30" Orientation="Horizontal" VerticalAlignment="Bottom" >
                                     <TextBlock Margin="0 0 5 0" Text="repeat every" VerticalAlignment="Center" />
