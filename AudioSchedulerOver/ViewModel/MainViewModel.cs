@@ -338,6 +338,7 @@ namespace AudioSchedulerOver.ViewModel
                     isAutoRunFired = true;
                 }
 
+                connectionTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
                 return true;
             }
