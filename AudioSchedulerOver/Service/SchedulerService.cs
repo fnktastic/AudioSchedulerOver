@@ -32,11 +32,16 @@ namespace AudioSchedulerOver.Service
 
             targetDate = targetDate.Add(startAt.Value);
             
-            if(targetDate > DateTime.Now && DateTime.Now.DayOfWeek == (DayOfWeek) dayEnum)
+            if(DateTime.Now.DayOfWeek == (DayOfWeek) dayEnum)
             {
-                targetDate = GetNextWeekday((DayOfWeek)dayEnum, 0);
+                targetDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0);
 
                 targetDate = targetDate.Add(startAt.Value);
+
+                while(targetDate < DateTime.Now)
+                {
+                    targetDate = targetDate.AddHours(intervalInHour);
+                }
             }
 
             var timeToGo = targetDate - DateTime.Now;
