@@ -170,8 +170,6 @@ namespace AudioSchedulerOver.ViewModel
         private void ConnectToApp()
         {
             EstablishConnection();
-
-            UpdateConfigs();
         }
 
         private RelayCommand<Audio> _peviewAudioCommand;
@@ -204,13 +202,11 @@ namespace AudioSchedulerOver.ViewModel
             };
 
             ScheduleViewModels.Add(scheduleViewModel);
-
-            await _scheduleRepository.AddAsync(scheduleViewModel.ConvertToSchedule());
         }
 
         private RelayCommand<ScheduleViewModel> _startScheduledPlaybackCommand;
         public RelayCommand<ScheduleViewModel> StartScheduledPlaybackCommand => _startScheduledPlaybackCommand ?? (_startScheduledPlaybackCommand = new RelayCommand<ScheduleViewModel>(StartScheduledPlayback));
-        private async void StartScheduledPlayback(ScheduleViewModel scheduleViewModel)
+        private void StartScheduledPlayback(ScheduleViewModel scheduleViewModel)
         {
             if (isConnectSuccess == false)
             {
@@ -235,8 +231,6 @@ namespace AudioSchedulerOver.ViewModel
             }, intervalEnum, scheduleId, dayEnum, start);
 
             scheduleViewModel.IsActive = true;
-
-            await _scheduleRepository.UpdateAsync(scheduleViewModel.ConvertToSchedule());
         }
 
         private RelayCommand<ScheduleViewModel> _stopScheduledPlaybackCommand;
@@ -281,6 +275,8 @@ namespace AudioSchedulerOver.ViewModel
                 _applicationVolumeProvider.SetApplicationVolume(100);
 
             UpdateConfigs();
+
+            SaveData();
         }
 
         private RelayCommand<object> _saveCommandCommnd;
@@ -308,8 +304,6 @@ namespace AudioSchedulerOver.ViewModel
 
         private bool EstablishConnection()
         {
-            UpdateConfigs();
-
             if (IsProcessExist(_appName) == false)
             {
                 ErrorMessage = "Cant find the target app by given name. Check exact name of the app and try again.";
@@ -362,6 +356,14 @@ namespace AudioSchedulerOver.ViewModel
                 return false;
 
             return true;
+        }
+
+        private async void SaveData()
+        {
+            foreach(var schedule in _scheduleViewModels)
+            {
+                await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule());
+            }
         }
     }
 }

@@ -65,6 +65,10 @@ namespace AudioSchedulerOver.Repository
 
                 await _context.SaveChangesAsync();
             }
+            else
+            {
+                await AddAsync(schedule);
+            }
         }
     }
 }
