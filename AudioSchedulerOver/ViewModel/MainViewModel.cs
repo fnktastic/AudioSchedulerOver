@@ -325,72 +325,11 @@ namespace AudioSchedulerOver.ViewModel
                 SuccessMessage = string.Format("App {0} is detected", _appName);
                 ErrorMessage = string.Empty;
                 isConnectSuccess = true;
-                /*
+
                 foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == false))
                 {
-                    var d = scheduleViewModel.StartDate;
-                    var i = scheduleViewModel.Interval;
-                    DateTime fakeStartDateTime = DateTime.Now;
-
-                    switch (scheduleViewModel.IntervalEnum)
-                    {
-                        case IntervalEnum.Day:
-                            fakeStartDateTime = new DateTime
-                                (
-                                DateTime.Now.Year,
-                                DateTime.Now.Month,
-                                d.Day, // + i,
-                                d.Hour,
-                                d.Minute,
-                                d.Second,
-                                d.Millisecond
-                                );
-                            break;
-                        case IntervalEnum.Hour:
-                            fakeStartDateTime = new DateTime
-                              (
-                                DateTime.Now.Year,
-                                DateTime.Now.Month,
-                                DateTime.Now.Day,
-                                d.Hour, // + i,
-                                d.Minute,
-                                d.Second,
-                                d.Millisecond
-                                );
-                            break;
-                        case IntervalEnum.Minute:
-                            fakeStartDateTime = new DateTime
-                                (
-                                DateTime.Now.Year,
-                                DateTime.Now.Month,
-                                DateTime.Now.Day,
-                                DateTime.Now.Hour,
-                                d.Minute, // + i,
-                                d.Second,
-                                d.Millisecond
-                                );
-                            break;
-                        case IntervalEnum.Second:
-                            fakeStartDateTime = new DateTime
-                                (
-                                DateTime.Now.Year,
-                                DateTime.Now.Month,
-                                DateTime.Now.Day,
-                                DateTime.Now.Hour,
-                                DateTime.Now.Minute,
-                                d.Second, // + i,
-                                d.Millisecond
-                                );
-                            break;                          
-                    }
-
-                    var span = DateTime.Now - fakeStartDateTime;
-
-                    scheduleViewModel.StartDate = fakeStartDateTime;
-
                     StartScheduledPlayback(scheduleViewModel);
                 }
-                */
 
                 return true;
             }
