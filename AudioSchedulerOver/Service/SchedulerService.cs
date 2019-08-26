@@ -34,11 +34,11 @@ namespace AudioSchedulerOver.Service
             
             if(DateTime.Now.DayOfWeek == (DayOfWeek) dayEnum)
             {
-                targetDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0);
+                targetDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0); // start of te day
 
-                targetDate = targetDate.Add(startAt.Value);
+                targetDate = targetDate.Add(startAt.Value); // add the rest
 
-                while(targetDate < DateTime.Now)
+                while(targetDate < DateTime.Now) // calculate next playing
                 {
                     targetDate = targetDate.AddHours(intervalInHour);
                 }
