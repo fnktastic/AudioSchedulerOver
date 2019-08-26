@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace AudioSession
 {
@@ -20,7 +21,23 @@ namespace AudioSession
 
         public void SetApplicationVolume(float level)
         {
-            SetApplicationVolume(_processId, level);
+            float currentVolume = GetApplicationVolume().Value;
+
+            if(currentVolume < level)
+            {
+                for(float i = 0; i < level; i++)
+                {
+                    SetApplicationVolume(_processId, i);
+                }
+            }
+
+            if (currentVolume > level)
+            {
+                for (float i = currentVolume; i > level; i--)
+                {
+                    SetApplicationVolume(_processId, i);
+                }
+            }
         }
 
         public float? GetApplicationVolume()
