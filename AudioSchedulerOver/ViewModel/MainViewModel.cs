@@ -198,7 +198,7 @@ namespace AudioSchedulerOver.ViewModel
                 ScheduleId = Guid.NewGuid(),
                 Interval = 0,
                 IntervalEnum = IntervalEnum.Second,
-                StartDate = DateTime.Now
+                StartDate = TimeSpan.Zero
             };
 
             ScheduleViewModels.Add(scheduleViewModel);
@@ -217,10 +217,11 @@ namespace AudioSchedulerOver.ViewModel
             }
 
             Audio audio = scheduleViewModel.Audio;
-            DateTime start = scheduleViewModel.StartDate;
+            TimeSpan start = scheduleViewModel.StartDate;
             int interval = scheduleViewModel.Interval;
             IntervalEnum intervalEnum = scheduleViewModel.IntervalEnum;
             Guid scheduleId = scheduleViewModel.ScheduleId;
+            DayEnum dayEnum = scheduleViewModel.DayEnum;
 
             _audioPlaybackScheduler.Interval(interval, () =>
             {
@@ -229,7 +230,7 @@ namespace AudioSchedulerOver.ViewModel
                     _applicationVolumeProvider.SetApplicationVolume(_targetVolume);
                     _playerService.OpenAndPlay(audio);
                 }));
-            }, intervalEnum, scheduleId, start);
+            }, intervalEnum, scheduleId, dayEnum , start);
 
             scheduleViewModel.IsActive = true;
 

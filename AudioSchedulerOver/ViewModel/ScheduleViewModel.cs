@@ -48,8 +48,8 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private DateTime _startDate;
-        public DateTime StartDate
+        private TimeSpan _startDate;
+        public TimeSpan StartDate
         {
             get { return _startDate; }
             set
@@ -78,7 +78,7 @@ namespace AudioSchedulerOver.ViewModel
                 Id = this.ScheduleId,
                 Interval = this.Interval,
                 IntervalEnum = this.IntervalEnum,
-                StartDate = this.StartDate,
+                StartDate = this.StartDate.Ticks,
                 DayEnum = this.DayEnum
             };
         }

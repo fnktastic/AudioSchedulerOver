@@ -11,7 +11,7 @@ namespace AudioSchedulerOver.Scheduler
 {
     public class AudioPlaybackScheduler
     {
-        public void Interval(double interval, Action task, IntervalEnum intervalEnum, Guid scheduleId, DateTime? startAt = null)
+        public void Interval(double interval, Action task, IntervalEnum intervalEnum, Guid scheduleId, DayEnum dayEnum, TimeSpan? startAt = null)
         {
             switch (intervalEnum)
             {
@@ -28,7 +28,7 @@ namespace AudioSchedulerOver.Scheduler
                     break;
             }
 
-            SchedulerService.Instance.ScheduleTask(interval, task, scheduleId, startAt);
+            SchedulerService.Instance.ScheduleTask(interval, task, scheduleId, dayEnum, startAt);
         }
 
         public void KillSchedule(Guid scheduleId)
