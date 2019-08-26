@@ -29,6 +29,8 @@ namespace AudioSession
                 {
                     SetApplicationVolume(_processId, i);
                 }
+
+                return;
             }
 
             if (currentVolume > level)
@@ -37,6 +39,8 @@ namespace AudioSession
                 {
                     SetApplicationVolume(_processId, i);
                 }
+
+                return;
             }
         }
 
