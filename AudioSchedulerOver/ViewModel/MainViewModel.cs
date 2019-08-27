@@ -190,7 +190,7 @@ namespace AudioSchedulerOver.ViewModel
 
         private RelayCommand<Audio> _addAudioToScheduleCommand;
         public RelayCommand<Audio> AddAudioToScheduleCommand => _addAudioToScheduleCommand ?? (_addAudioToScheduleCommand = new RelayCommand<Audio>(AddAudioToSchedule));
-        private async void AddAudioToSchedule(Audio audio)
+        private void AddAudioToSchedule(Audio audio)
         {
             var scheduleViewModel = new ScheduleViewModel()
             {
@@ -282,6 +282,8 @@ namespace AudioSchedulerOver.ViewModel
             }
             catch(Exception ex)
             {
+                Logging.Logger.Log.Error("Application exiting with error.");
+
                 Logging.Logger.Log.Error(ex);
 
                 UpdateConfigs();
@@ -293,7 +295,7 @@ namespace AudioSchedulerOver.ViewModel
             }
             finally
             {
-                Logging.Logger.Log.Error("Application exited with error");
+                Logging.Logger.Log.Error("Application exited.");
             }
         }
 
@@ -310,9 +312,9 @@ namespace AudioSchedulerOver.ViewModel
             UpdateSetting("tagetVolume", _targetVolume.ToString());
         }
 
-        private void UpdateSetting(string key, string value)
+        private async void UpdateSetting(string key, string value)
         {
-            _settingRepository.Update(key, value);
+            await _settingRepository.Update(key, value); //.GetAwaiter().GetResult();
         }
 
         private string GetSetting(string key)
@@ -380,7 +382,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             foreach(var schedule in _scheduleViewModels)
             {
-                await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule());
+                await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule()); //.GetAwaiter().GetResult();
             }
         }
     }

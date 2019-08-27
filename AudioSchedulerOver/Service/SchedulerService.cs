@@ -26,19 +26,48 @@ namespace AudioSchedulerOver.Service
             return result;
         }
 
-        public void ScheduleTask(double intervalInHour, Action task, Guid scheduleId, DayEnum dayEnum, TimeSpan? startAt = null)
+        private void ScheduleTaskOnce(double intervalInHour, Action task, Guid scheduleId, DayEnum dayEnum, TimeSpan? startAt = null)
         {
+            Timer timer;
+            TimeSpan timeToGo;
+
             var targetDate = GetNextWeekday((DayOfWeek)dayEnum);
 
             targetDate = targetDate.Add(startAt.Value);
-            
-            if(DateTime.Now.DayOfWeek == (DayOfWeek) dayEnum)
+
+            if (DateTime.Now.DayOfWeek == (DayOfWeek)dayEnum)
             {
                 targetDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0); // start of te day
 
                 targetDate = targetDate.Add(startAt.Value); // add the rest
 
-                while(targetDate < DateTime.Now) // calculate next playing
+                if (DateTime.Now > targetDate)
+                    targetDate = targetDate.AddDays(7);
+            }
+
+            timeToGo = targetDate - DateTime.Now;
+
+            timer = new Timer(x =>
+            {
+                task.Invoke();
+            }, null, timeToGo.Ticks / 10_000, Timeout.Infinite);
+
+            _timers.Add(scheduleId, timer);
+        }
+
+        private void ScheduleRepeatedTask(double intervalInHour, Action task, Guid scheduleId, DayEnum dayEnum, TimeSpan? startAt = null)
+        {
+            var targetDate = GetNextWeekday((DayOfWeek)dayEnum);
+
+            targetDate = targetDate.Add(startAt.Value);
+
+            if (DateTime.Now.DayOfWeek == (DayOfWeek)dayEnum)
+            {
+                targetDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0); // start of te day
+
+                targetDate = targetDate.Add(startAt.Value); // add the rest
+
+                while (targetDate < DateTime.Now) // calculate next playing
                 {
                     targetDate = targetDate.AddHours(intervalInHour);
                 }
@@ -54,9 +83,18 @@ namespace AudioSchedulerOver.Service
             _timers.Add(scheduleId, timer);
         }
 
+        public void ScheduleTask(double intervalInHour, Action task, Guid scheduleId, DayEnum dayEnum, TimeSpan? startAt = null)
+        {
+            if (intervalInHour == 0)
+                ScheduleTaskOnce(intervalInHour, task, scheduleId, dayEnum, startAt);
+
+            if (intervalInHour > 0)
+                ScheduleRepeatedTask(intervalInHour, task, scheduleId, dayEnum, startAt);
+        }
+
         public void KillSchedule(Guid scheduleId)
         {
-            if(_timers.ContainsKey(scheduleId))
+            if (_timers.ContainsKey(scheduleId))
             {
                 var timer = _timers[scheduleId];
 
