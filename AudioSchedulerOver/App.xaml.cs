@@ -25,7 +25,6 @@ namespace AudioSchedulerOver
         void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Exception.Message, e.Exception.StackTrace, e.Exception.Data));
-            MessageBox.Show("Unhandled exception occurred: \n" + e.Exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

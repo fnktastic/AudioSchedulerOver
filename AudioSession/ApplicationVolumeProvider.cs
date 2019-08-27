@@ -16,42 +16,64 @@ namespace AudioSession
 
         public void SetApplicationMute(bool mute)
         {
-            SetApplicationMute(_processId, mute);
+            try
+            {
+                SetApplicationMute(_processId, mute);
+            }
+            catch { }
         }
 
         public void SetApplicationVolume(float level)
         {
-            float currentVolume = GetApplicationVolume().Value;
-
-            if(currentVolume < level)
+            try
             {
-                for(float i = 0; i < level; i++)
+                float currentVolume = GetApplicationVolume().Value;
+
+                if (currentVolume < level)
                 {
-                    SetApplicationVolume(_processId, i);
+                    for (float i = 0; i < level; i++)
+                    {
+                        SetApplicationVolume(_processId, i);
+                    }
+
+                    return;
                 }
 
-                return;
-            }
-
-            if (currentVolume > level)
-            {
-                for (float i = currentVolume; i > level; i--)
+                if (currentVolume > level)
                 {
-                    SetApplicationVolume(_processId, i);
-                }
+                    for (float i = currentVolume; i > level; i--)
+                    {
+                        SetApplicationVolume(_processId, i);
+                    }
 
-                return;
+                    return;
+                }
             }
+            catch { }
         }
 
         public float? GetApplicationVolume()
         {
-            return GetApplicationVolume(_processId);
+            try
+            {
+                return GetApplicationVolume(_processId);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public bool? GetApplicationMute()
         {
-            return GetApplicationMute(_processId);
+            try
+            {
+                return GetApplicationMute(_processId);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public ApplicationVolumeProvider(string applicationName)

@@ -142,7 +142,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 EstablishConnection();
 
-            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
+            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
         }
 
         private RelayCommand<DragEventArgs> _dropAudioCommand;
@@ -208,29 +208,43 @@ namespace AudioSchedulerOver.ViewModel
         public RelayCommand<ScheduleViewModel> StartScheduledPlaybackCommand => _startScheduledPlaybackCommand ?? (_startScheduledPlaybackCommand = new RelayCommand<ScheduleViewModel>(StartScheduledPlayback));
         private void StartScheduledPlayback(ScheduleViewModel scheduleViewModel)
         {
-            if (isConnectSuccess == false)
+            try
             {
-                ErrorMessage = "Error. Connect to the media player first.";
-                return;
-            }
-
-            Audio audio = scheduleViewModel.Audio;
-            TimeSpan start = scheduleViewModel.StartDate;
-            int interval = scheduleViewModel.Interval;
-            IntervalEnum intervalEnum = scheduleViewModel.IntervalEnum;
-            Guid scheduleId = scheduleViewModel.ScheduleId;
-            DayEnum dayEnum = scheduleViewModel.DayEnum;
-
-            _audioPlaybackScheduler.Interval(interval, () =>
-            {
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new System.Action(() =>
+                if (isConnectSuccess == false)
                 {
-                    _applicationVolumeProvider.SetApplicationVolume(_targetVolume);
-                    _playerService.OpenAndPlay(audio);
-                }));
-            }, intervalEnum, scheduleId, dayEnum, start);
+                    ErrorMessage = "Error. Connect to the media player first.";
+                    return;
+                }
 
-            scheduleViewModel.IsActive = true;
+                Audio audio = scheduleViewModel.Audio;
+                TimeSpan start = scheduleViewModel.StartDate;
+                int interval = scheduleViewModel.Interval;
+                IntervalEnum intervalEnum = scheduleViewModel.IntervalEnum;
+                Guid scheduleId = scheduleViewModel.ScheduleId;
+                DayEnum dayEnum = scheduleViewModel.DayEnum;
+
+                _audioPlaybackScheduler.Interval(interval, () =>
+                {
+                    Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new System.Action(() =>
+                    {
+                        try
+                        {
+                            _applicationVolumeProvider.SetApplicationVolume(_targetVolume);
+                            _playerService.OpenAndPlay(audio);
+                        }
+                        catch(Exception ex)
+                        {
+                            Logging.Logger.Log.Error(ex);
+                        }
+                    }));
+                }, intervalEnum, scheduleId, dayEnum, start);
+
+                scheduleViewModel.IsActive = true;
+            }
+            catch(Exception ex)
+            {
+                Logging.Logger.Log.Error(ex);
+            }
         }
 
         private RelayCommand<ScheduleViewModel> _stopScheduledPlaybackCommand;
@@ -330,6 +344,13 @@ namespace AudioSchedulerOver.ViewModel
                 SuccessMessage = string.Empty;
                 isConnectSuccess = false;
 
+                foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == true))
+                {
+                    StopScheduledPlayback(scheduleViewModel);
+                }
+
+                isAutoRunFired = false;
+
                 return false;
             }
 
@@ -354,19 +375,12 @@ namespace AudioSchedulerOver.ViewModel
                     isAutoRunFired = true;
                 }
 
-                connectionTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                //connectionTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
                 return true;
             }
-            else
-            {
-                ErrorMessage = "Cant find the target app by given name. Check exact name of the app and try again.";
-                SuccessMessage = string.Empty;
-                isConnectSuccess = false;
 
-                return false;
-            }
-
+            return false;
         }
         private bool IsProcessExist(string processName)
         {
