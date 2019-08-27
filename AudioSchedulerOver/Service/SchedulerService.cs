@@ -30,6 +30,7 @@ namespace AudioSchedulerOver.Service
         {
             Timer timer;
             TimeSpan timeToGo;
+            TimeSpan period;
 
             var targetDate = GetNextWeekday((DayOfWeek)dayEnum);
 
@@ -47,10 +48,12 @@ namespace AudioSchedulerOver.Service
 
             timeToGo = targetDate - DateTime.Now;
 
+            period = targetDate - targetDate.AddDays(-7);
+
             timer = new Timer(x =>
             {
                 task.Invoke();
-            }, null, timeToGo.Ticks / 10_000, Timeout.Infinite);
+            }, null, timeToGo.Ticks / 10_000, period.Ticks / 10_000);
 
             _timers.Add(scheduleId, timer);
         }
