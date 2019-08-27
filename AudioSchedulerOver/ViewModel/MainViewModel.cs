@@ -271,12 +271,30 @@ namespace AudioSchedulerOver.ViewModel
         public RelayCommand<object> OnAppCloseCommand => _onAppCloseCommand ?? (_onAppCloseCommand = new RelayCommand<object>(OnAppClose));
         private void OnAppClose(object e)
         {
-            if (_applicationVolumeProvider != null)
-                _applicationVolumeProvider.SetApplicationVolume(100);
+            try
+            {
+                UpdateConfigs();
 
-            UpdateConfigs();
+                SaveData();
 
-            SaveData();
+                if (_applicationVolumeProvider != null)
+                    _applicationVolumeProvider.SetApplicationVolume(100);
+            }
+            catch(Exception ex)
+            {
+                Logging.Logger.Log.Error(ex);
+
+                UpdateConfigs();
+
+                SaveData();
+
+                if (_applicationVolumeProvider != null)
+                    _applicationVolumeProvider.SetApplicationVolume(100);
+            }
+            finally
+            {
+                Logging.Logger.Log.Error("Application exited with error");
+            }
         }
 
         private RelayCommand<object> _saveCommandCommnd;
