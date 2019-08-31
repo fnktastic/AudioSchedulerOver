@@ -20,7 +20,7 @@ namespace AudioSchedulerOver.Service
 
         static DateTime GetNextWeekday(DayOfWeek day, int extraDay = 1)
         {
-            DateTime result = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day + extraDay, 0, 0, 0);
+            DateTime result = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0).AddDays(extraDay);
             while (result.DayOfWeek != day)
                 result = result.AddDays(1);
             return result;
