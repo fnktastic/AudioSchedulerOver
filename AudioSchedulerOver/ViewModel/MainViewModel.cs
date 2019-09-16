@@ -1,5 +1,6 @@
 ﻿using AudioSchedulerOver.DataAccess;
 using AudioSchedulerOver.Enum;
+using AudioSchedulerOver.Logging;
 using AudioSchedulerOver.Model;
 using AudioSchedulerOver.Repository;
 using AudioSchedulerOver.Scheduler;
@@ -338,49 +339,57 @@ namespace AudioSchedulerOver.ViewModel
 
         private bool EstablishConnection()
         {
-            if (IsProcessExist(_appName) == false)
+            try
             {
-                ErrorMessage = "Cant find the target app by given name. Check exact name of the app and try again.";
-                SuccessMessage = string.Empty;
-                isConnectSuccess = false;
-
-                foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == true))
+                if (IsProcessExist(_appName) == false)
                 {
-                    StopScheduledPlayback(scheduleViewModel);
+                    ErrorMessage = "Cant find the target app by given name. Check exact name of the app and try again.";
+                    SuccessMessage = string.Empty;
+                    isConnectSuccess = false;
+
+                    foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == true))
+                    {
+                        StopScheduledPlayback(scheduleViewModel);
+                    }
+
+                    isAutoRunFired = false;
+
+                    return false;
                 }
 
-                isAutoRunFired = false;
+                _applicationVolumeProvider = new ApplicationVolumeProvider(_appName);
+
+                PlayerService.ApplicationVolumeProvider = _applicationVolumeProvider;
+
+                if (_applicationVolumeProvider.IsConnected)
+                {
+                    float? appVolume = _applicationVolumeProvider.GetApplicationVolume();
+                    SuccessMessage = string.Format("App {0} is detected", _appName);
+                    ErrorMessage = string.Empty;
+                    isConnectSuccess = true;
+
+                    if (isAutoRunFired == false)
+                    {
+                        foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == false))
+                        {
+                            StartScheduledPlayback(scheduleViewModel);
+                        }
+
+                        isAutoRunFired = true;
+                    }
+
+                    //connectionTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                    return true;
+                }
 
                 return false;
             }
-
-            _applicationVolumeProvider = new ApplicationVolumeProvider(_appName);
-
-            PlayerService.ApplicationVolumeProvider = _applicationVolumeProvider;
-
-            if (_applicationVolumeProvider.IsConnected)
+            catch(Exception e)
             {
-                float? appVolume = _applicationVolumeProvider.GetApplicationVolume();
-                SuccessMessage = string.Format("App {0} is detected", _appName);
-                ErrorMessage = string.Empty;
-                isConnectSuccess = true;
-
-                if (isAutoRunFired == false)
-                {
-                    foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == false))
-                    {
-                        StartScheduledPlayback(scheduleViewModel);
-                    }
-
-                    isAutoRunFired = true;
-                }
-
-                //connectionTimer.Change(Timeout.Infinite, Timeout.Infinite);
-
-                return true;
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+                return false;
             }
-
-            return false;
         }
         private bool IsProcessExist(string processName)
         {

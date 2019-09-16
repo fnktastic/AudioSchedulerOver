@@ -45,7 +45,7 @@ namespace AudioSchedulerOver.Service
             Close();
 
             var uri = new Uri(audio.FilePath);
-
+            
             _mediaPlayer.Open(uri);
 
             Play();
