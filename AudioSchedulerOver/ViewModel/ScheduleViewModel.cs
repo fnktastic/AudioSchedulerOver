@@ -26,8 +26,8 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private DayEnum _dayEnum;
-        public DayEnum DayEnum
+        private DayOfWeek _dayEnum;
+        public DayOfWeek DayEnum
         {
             get { return _dayEnum; }
             set

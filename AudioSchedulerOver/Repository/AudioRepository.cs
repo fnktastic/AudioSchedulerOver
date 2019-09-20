@@ -1,4 +1,5 @@
 ﻿using AudioSchedulerOver.DataAccess;
+using AudioSchedulerOver.Logging;
 using AudioSchedulerOver.Model;
 using System;
 using System.Collections.Generic;
@@ -28,25 +29,47 @@ namespace AudioSchedulerOver.Repository
 
         public async Task AddAsync(Audio audio)
         {
-            _context.Audios.Add(audio);
+            try
+            {
+                _context.Audios.Add(audio);
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         public IEnumerable<Audio> GetAll()
         {
-            return _context.Audios.ToList();
+            try
+            {
+                return _context.Audios.ToList();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+                return null;
+            }
         }
 
         public async Task RemoveAsync(Audio audio)
         {
-            var dbEntry = _context.Audios.Find(audio.Id);
-            if(dbEntry != null)
+            try
             {
-                _context.Entry(dbEntry).State = EntityState.Deleted;
-            }
+                var dbEntry = _context.Audios.Find(audio.Id);
+                if (dbEntry != null)
+                {
+                    _context.Entry(dbEntry).State = EntityState.Deleted;
+                }
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
     }
 }

@@ -1,11 +1,8 @@
 ﻿using AudioSchedulerOver.Enum;
-using AudioSchedulerOver.Scheduler;
+using AudioSchedulerOver.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace AudioSchedulerOver.Service
 {
@@ -18,7 +15,7 @@ namespace AudioSchedulerOver.Service
 
         public static SchedulerService Instance => _instance ?? (_instance = new SchedulerService());
 
-        static DateTime GetNextWeekday(DayOfWeek day, int extraDay = 1)
+        static DateTime GetNextWeekday(System.DayOfWeek day, int extraDay = 1)
         {
             DateTime result = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0).AddDays(extraDay);
             while (result.DayOfWeek != day)
@@ -26,67 +23,81 @@ namespace AudioSchedulerOver.Service
             return result;
         }
 
-        private void ScheduleTaskOnce(double intervalInHour, Action task, Guid scheduleId, DayEnum dayEnum, TimeSpan? startAt = null)
+        private void ScheduleTaskOnce(double intervalInHour, Action task, Guid scheduleId, DayOfWeek dayEnum, TimeSpan? startAt = null)
         {
-            Timer timer;
-            TimeSpan timeToGo;
-            TimeSpan period;
-
-            var targetDate = GetNextWeekday((DayOfWeek)dayEnum);
-
-            targetDate = targetDate.Add(startAt.Value);
-
-            if (DateTime.Now.DayOfWeek == (DayOfWeek)dayEnum)
+            try
             {
-                targetDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0); // start of te day
+                Timer timer;
+                TimeSpan timeToGo;
+                TimeSpan period;
 
-                targetDate = targetDate.Add(startAt.Value); // add the rest
+                var targetDate = GetNextWeekday((System.DayOfWeek)dayEnum);
 
-                if (DateTime.Now > targetDate)
-                    targetDate = targetDate.AddDays(7);
-            }
+                targetDate = targetDate.Add(startAt.Value);
 
-            timeToGo = targetDate - DateTime.Now;
-
-            period = targetDate - targetDate.AddDays(-7);
-
-            timer = new Timer(x =>
-            {
-                task.Invoke();
-            }, null, timeToGo.Ticks / 10_000, period.Ticks / 10_000);
-
-            _timers.Add(scheduleId, timer);
-        }
-
-        private void ScheduleRepeatedTask(double intervalInHour, Action task, Guid scheduleId, DayEnum dayEnum, TimeSpan? startAt = null)
-        {
-            var targetDate = GetNextWeekday((DayOfWeek)dayEnum);
-
-            targetDate = targetDate.Add(startAt.Value);
-
-            if (DateTime.Now.DayOfWeek == (DayOfWeek)dayEnum)
-            {
-                targetDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0); // start of te day
-
-                targetDate = targetDate.Add(startAt.Value); // add the rest
-
-                while (targetDate < DateTime.Now) // calculate next playing
+                if (DateTime.Now.DayOfWeek == dayEnum)
                 {
-                    targetDate = targetDate.AddHours(intervalInHour);
+                    targetDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0); // start of te day
+
+                    targetDate = targetDate.Add(startAt.Value); // add the rest
+
+                    if (DateTime.Now > targetDate)
+                        targetDate = targetDate.AddDays(7);
                 }
+
+                timeToGo = targetDate - DateTime.Now;
+
+                period = targetDate - targetDate.AddDays(-7);
+
+                timer = new Timer(x =>
+                {
+                    task.Invoke();
+                }, null, timeToGo.Ticks / 10_000, period.Ticks / 10_000);
+
+                _timers.Add(scheduleId, timer);
             }
-
-            var timeToGo = targetDate - DateTime.Now;
-
-            var timer = new Timer(x =>
+            catch (Exception e)
             {
-                task.Invoke();
-            }, null, timeToGo, TimeSpan.FromHours(intervalInHour));
-
-            _timers.Add(scheduleId, timer);
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
-        public void ScheduleTask(double intervalInHour, Action task, Guid scheduleId, DayEnum dayEnum, TimeSpan? startAt = null)
+        private void ScheduleRepeatedTask(double intervalInHour, Action task, Guid scheduleId, DayOfWeek dayEnum, TimeSpan? startAt = null)
+        {
+            try
+            {
+                var targetDate = GetNextWeekday(dayEnum);
+
+                targetDate = targetDate.Add(startAt.Value);
+
+                if (DateTime.Now.DayOfWeek == dayEnum)
+                {
+                    targetDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0); // start of te day
+
+                    targetDate = targetDate.Add(startAt.Value); // add the rest
+
+                    while (targetDate < DateTime.Now) // calculate next playing
+                    {
+                        targetDate = targetDate.AddHours(intervalInHour);
+                    }
+                }
+
+                var timeToGo = targetDate - DateTime.Now;
+
+                var timer = new Timer(x =>
+                {
+                    task.Invoke();
+                }, null, timeToGo, TimeSpan.FromHours(intervalInHour));
+
+                _timers.Add(scheduleId, timer);
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
+        }
+
+        public void ScheduleTask(double intervalInHour, Action task, Guid scheduleId, DayOfWeek dayEnum, TimeSpan? startAt = null)
         {
             if (intervalInHour == 0)
                 ScheduleTaskOnce(intervalInHour, task, scheduleId, dayEnum, startAt);
@@ -97,13 +108,20 @@ namespace AudioSchedulerOver.Service
 
         public void KillSchedule(Guid scheduleId)
         {
-            if (_timers.ContainsKey(scheduleId))
+            try
             {
-                var timer = _timers[scheduleId];
+                if (_timers.ContainsKey(scheduleId))
+                {
+                    var timer = _timers[scheduleId];
 
-                timer.Change(Timeout.Infinite, Timeout.Infinite);
+                    timer.Change(Timeout.Infinite, Timeout.Infinite);
 
-                _timers.Remove(scheduleId);
+                    _timers.Remove(scheduleId);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
             }
         }
     }

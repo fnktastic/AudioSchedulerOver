@@ -9,6 +9,7 @@
         xmlns:local="clr-namespace:AudioSchedulerOver"
         xmlns:viewModel="clr-namespace:AudioSchedulerOver.ViewModel"
         xmlns:enum="clr-namespace:AudioSchedulerOver.Enum"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"   
         xmlns:model="clr-namespace:AudioSchedulerOver.Model"
         xmlns:converter="clr-namespace:AudioSchedulerOver.Converters"          
         mc:Ignorable="d"
@@ -25,9 +26,9 @@
                 <x:Type TypeName="enum:IntervalEnum"/>
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
-        <ObjectDataProvider x:Key="dayEnum" MethodName="GetValues" ObjectType="{x:Type enum:DayEnum}">
+        <ObjectDataProvider x:Key="dayEnum" MethodName="GetValues" ObjectType="{x:Type system:DayOfWeek}">
             <ObjectDataProvider.MethodParameters>
-                <x:Type TypeName="enum:DayEnum"/>
+                <x:Type TypeName="system:DayOfWeek"/>
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
 

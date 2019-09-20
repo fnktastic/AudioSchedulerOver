@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AudioSchedulerOver.DataAccess;
 using System.Data.Entity;
+using AudioSchedulerOver.Logging;
 
 namespace AudioSchedulerOver.Repository
 {
@@ -30,44 +31,73 @@ namespace AudioSchedulerOver.Repository
 
         public async Task AddAsync(Schedule schedule)
         {
-            _context.Schedules.Add(schedule);
+            try
+            {
+                _context.Schedules.Add(schedule);
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         public IEnumerable<Schedule> GetAll()
         {
-            return _context.Schedules.Include(x => x.Audio).ToList();
+            try
+            {
+                return _context.Schedules.Include(x => x.Audio).ToList();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+                return null;
+            }
         }
 
         public async Task RemoveAsync(Schedule schedule)
         {
-            var dbEntry = _context.Schedules.Find(schedule.Id);
-            if (dbEntry != null)
+            try
             {
-                _context.Entry(dbEntry).State = EntityState.Deleted;
-            }
+                var dbEntry = _context.Schedules.Find(schedule.Id);
+                if (dbEntry != null)
+                {
+                    _context.Entry(dbEntry).State = EntityState.Deleted;
+                }
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         public async Task UpdateAsync(Schedule schedule)
         {
-            var dbEntry = _context.Schedules.Find(schedule.Id);
-
-            if(dbEntry != null)
+            try
             {
-                dbEntry.Audio = schedule.Audio;
-                dbEntry.Interval = schedule.Interval;
-                dbEntry.IntervalEnum = schedule.IntervalEnum;
-                dbEntry.StartDate = schedule.StartDate;
-                dbEntry.DayEnum = schedule.DayEnum;
+                var dbEntry = _context.Schedules.Find(schedule.Id);
 
-                await _context.SaveChangesAsync();
+                if (dbEntry != null)
+                {
+                    dbEntry.Audio = schedule.Audio;
+                    dbEntry.Interval = schedule.Interval;
+                    dbEntry.IntervalEnum = schedule.IntervalEnum;
+                    dbEntry.StartDate = schedule.StartDate;
+                    dbEntry.DayEnum = schedule.DayEnum;
+
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    await AddAsync(schedule);
+                }
             }
-            else
+            catch (Exception e)
             {
-                await AddAsync(schedule);
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
             }
         }
     }

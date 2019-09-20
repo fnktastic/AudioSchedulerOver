@@ -34,12 +34,15 @@ namespace AudioSchedulerOver.ViewModel
 
         private const string APP = "Y.Music";
 
+        private const int AUTOCHECK_INTERVAL = 3;
+
         private bool isConnectSuccess;
 
         private bool isAutoRunFired = false;
 
         private readonly Timer connectionTimer;
 
+        #region properties
         private ObservableCollection<Audio> _audios;
         public ObservableCollection<Audio> Audios
         {
@@ -116,6 +119,7 @@ namespace AudioSchedulerOver.ViewModel
                 RaisePropertyChanged(nameof(SelectedInterval));
             }
         }
+        #endregion
 
         public MainViewModel()
         {
@@ -143,26 +147,33 @@ namespace AudioSchedulerOver.ViewModel
             {
                 EstablishConnection();
 
-            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+            }, null, TimeSpan.FromSeconds(AUTOCHECK_INTERVAL), TimeSpan.FromSeconds(AUTOCHECK_INTERVAL));
         }
 
         private RelayCommand<DragEventArgs> _dropAudioCommand;
         public RelayCommand<DragEventArgs> DropAudioCommand => _dropAudioCommand ?? (_dropAudioCommand = new RelayCommand<DragEventArgs>(DropAudio));
         private async void DropAudio(DragEventArgs e)
         {
-            var drop = e.Data.GetData("FileDrop");
-            if (drop != null && drop is string[])
+            try
             {
-                var files = drop as string[];
-
-                foreach (var file in files)
+                var drop = e.Data.GetData("FileDrop");
+                if (drop != null && drop is string[])
                 {
-                    var audio = Audio.CreateInstnceFromPath(file);
+                    var files = drop as string[];
 
-                    await _audioRepository.AddAsync(audio);
+                    foreach (var file in files)
+                    {
+                        var audio = Audio.CreateInstnceFromPath(file);
 
-                    Audios.Add(audio);
+                        await _audioRepository.AddAsync(audio);
+
+                        Audios.Add(audio);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", ex.Message, ex.StackTrace, ex.Data));
             }
         }
 
@@ -170,39 +181,67 @@ namespace AudioSchedulerOver.ViewModel
         public RelayCommand ConnectToAppCommnd => _connectToAppCommnd ?? (_connectToAppCommnd = new RelayCommand(ConnectToApp));
         private void ConnectToApp()
         {
-            EstablishConnection();
+            try
+            {
+                EstablishConnection();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         private RelayCommand<Audio> _peviewAudioCommand;
         public RelayCommand<Audio> PeviewAudioCommand => _peviewAudioCommand ?? (_peviewAudioCommand = new RelayCommand<Audio>(PeviewAudio));
         private void PeviewAudio(Audio audio)
         {
-            _playerService.OpenAndPlay(audio);
+            try
+            {
+                _playerService.OpenAndPlay(audio);
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         private RelayCommand<Audio> _removeAudioCommand;
         public RelayCommand<Audio> RemoveAudioCommand => _removeAudioCommand ?? (_removeAudioCommand = new RelayCommand<Audio>(RemoveAudio));
         private async void RemoveAudio(Audio audio)
         {
-            _audios.Remove(audio);
+            try
+            {
+                _audios.Remove(audio);
 
-            await _audioRepository.RemoveAsync(audio);
+                await _audioRepository.RemoveAsync(audio);
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         private RelayCommand<Audio> _addAudioToScheduleCommand;
         public RelayCommand<Audio> AddAudioToScheduleCommand => _addAudioToScheduleCommand ?? (_addAudioToScheduleCommand = new RelayCommand<Audio>(AddAudioToSchedule));
         private void AddAudioToSchedule(Audio audio)
         {
-            var scheduleViewModel = new ScheduleViewModel()
+            try
             {
-                Audio = audio,
-                ScheduleId = Guid.NewGuid(),
-                Interval = 0,
-                IntervalEnum = IntervalEnum.Second,
-                StartDate = TimeSpan.Zero
-            };
+                var scheduleViewModel = new ScheduleViewModel()
+                {
+                    Audio = audio,
+                    ScheduleId = Guid.NewGuid(),
+                    Interval = 0,
+                    IntervalEnum = IntervalEnum.Second,
+                    StartDate = TimeSpan.Zero
+                };
 
-            ScheduleViewModels.Add(scheduleViewModel);
+                ScheduleViewModels.Add(scheduleViewModel);
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         private RelayCommand<ScheduleViewModel> _startScheduledPlaybackCommand;
@@ -222,7 +261,7 @@ namespace AudioSchedulerOver.ViewModel
                 int interval = scheduleViewModel.Interval;
                 IntervalEnum intervalEnum = scheduleViewModel.IntervalEnum;
                 Guid scheduleId = scheduleViewModel.ScheduleId;
-                DayEnum dayEnum = scheduleViewModel.DayEnum;
+                DayOfWeek dayEnum = scheduleViewModel.DayEnum;
 
                 _audioPlaybackScheduler.Interval(interval, () =>
                 {
@@ -233,18 +272,18 @@ namespace AudioSchedulerOver.ViewModel
                             _applicationVolumeProvider.SetApplicationVolume(_targetVolume);
                             _playerService.OpenAndPlay(audio);
                         }
-                        catch(Exception ex)
+                        catch (Exception e)
                         {
-                            Logging.Logger.Log.Error(ex);
+                            Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
                         }
                     }));
                 }, intervalEnum, scheduleId, dayEnum, start);
 
                 scheduleViewModel.IsActive = true;
             }
-            catch(Exception ex)
+            catch (Exception e)
             {
-                Logging.Logger.Log.Error(ex);
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
             }
         }
 
@@ -252,39 +291,67 @@ namespace AudioSchedulerOver.ViewModel
         public RelayCommand<ScheduleViewModel> StopScheduledPlaybackCommand => _stopScheduledPlaybackCommand ?? (_stopScheduledPlaybackCommand = new RelayCommand<ScheduleViewModel>(StopScheduledPlayback));
         private void StopScheduledPlayback(ScheduleViewModel scheduleViewModel)
         {
-            Guid scheduleId = scheduleViewModel.ScheduleId;
+            try
+            {
+                Guid scheduleId = scheduleViewModel.ScheduleId;
 
-            _audioPlaybackScheduler.KillSchedule(scheduleId);
+                _audioPlaybackScheduler.KillSchedule(scheduleId);
 
-            scheduleViewModel.IsActive = false;
+                scheduleViewModel.IsActive = false;
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         private RelayCommand<ScheduleViewModel> _playScheduleCommand;
         public RelayCommand<ScheduleViewModel> PlayScheduleCommand => _playScheduleCommand ?? (_playScheduleCommand = new RelayCommand<ScheduleViewModel>(PlaySchedule));
         private void PlaySchedule(ScheduleViewModel scheduleViewModel)
         {
-            PeviewAudio(scheduleViewModel.Audio);
+            try
+            {
+                PeviewAudio(scheduleViewModel.Audio);
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         private RelayCommand<ScheduleViewModel> _removeScheduleCommand;
         public RelayCommand<ScheduleViewModel> RemoveScheduleCommand => _removeScheduleCommand ?? (_removeScheduleCommand = new RelayCommand<ScheduleViewModel>(RemoveSchedule));
         private async void RemoveSchedule(ScheduleViewModel scheduleViewModel)
         {
-            ScheduleViewModels.Remove(scheduleViewModel);
+            try
+            {
+                ScheduleViewModels.Remove(scheduleViewModel);
 
-            await _scheduleRepository.RemoveAsync(scheduleViewModel.ConvertToSchedule());
+                await _scheduleRepository.RemoveAsync(scheduleViewModel.ConvertToSchedule());
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         private RelayCommand<ScheduleViewModel> _saveScheduleCommand;
         public RelayCommand<ScheduleViewModel> SaveScheduleCommand => _saveScheduleCommand ?? (_saveScheduleCommand = new RelayCommand<ScheduleViewModel>(SaveSchedule));
         private async void SaveSchedule(ScheduleViewModel scheduleViewModel)
         {
-            await _scheduleRepository.UpdateAsync(scheduleViewModel.ConvertToSchedule());
+            try
+            {
+                await _scheduleRepository.UpdateAsync(scheduleViewModel.ConvertToSchedule());
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         private RelayCommand<object> _onAppCloseCommand;
         public RelayCommand<object> OnAppCloseCommand => _onAppCloseCommand ?? (_onAppCloseCommand = new RelayCommand<object>(OnAppClose));
-        private void OnAppClose(object e)
+        private void OnAppClose(object o)
         {
             try
             {
@@ -295,11 +362,11 @@ namespace AudioSchedulerOver.ViewModel
                 if (_applicationVolumeProvider != null)
                     _applicationVolumeProvider.SetApplicationVolume(100);
             }
-            catch(Exception ex)
+            catch (Exception e)
             {
-                Logging.Logger.Log.Error("Application exiting with error.");
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
 
-                Logging.Logger.Log.Error(ex);
+                Logging.Logger.Log.Error(e);
 
                 UpdateConfigs();
 
@@ -310,7 +377,7 @@ namespace AudioSchedulerOver.ViewModel
             }
             finally
             {
-                Logging.Logger.Log.Error("Application exited.");
+                Logger.Log.Info("Application Shutdown");
             }
         }
 
@@ -323,18 +390,40 @@ namespace AudioSchedulerOver.ViewModel
 
         private void UpdateConfigs()
         {
-            UpdateSetting("appName", _appName);
-            UpdateSetting("tagetVolume", _targetVolume.ToString());
+            try
+            {
+                UpdateSetting("appName", _appName);
+                UpdateSetting("tagetVolume", _targetVolume.ToString());
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         private async void UpdateSetting(string key, string value)
         {
-            await _settingRepository.Update(key, value); //.GetAwaiter().GetResult();
+            try
+            {
+                await _settingRepository.Update(key, value);
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         private string GetSetting(string key)
         {
-            return _settingRepository.Get(key).Value;
+            try
+            {
+                return _settingRepository.Get(key).Value;
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+                return string.Empty;
+            }
         }
 
         private bool EstablishConnection()
@@ -385,7 +474,7 @@ namespace AudioSchedulerOver.ViewModel
 
                 return false;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
                 return false;
@@ -393,19 +482,34 @@ namespace AudioSchedulerOver.ViewModel
         }
         private bool IsProcessExist(string processName)
         {
-            var process = Process.GetProcesses().FirstOrDefault(x => x.ProcessName == processName);
+            try
+            {
+                var process = Process.GetProcesses().FirstOrDefault(x => x.ProcessName == processName);
 
-            if (process == null)
+                if (process == null)
+                    return false;
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
                 return false;
-
-            return true;
+            }
         }
 
         private async void SaveData()
         {
-            foreach(var schedule in _scheduleViewModels)
+            try
             {
-                await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule()); //.GetAwaiter().GetResult();
+                foreach (var schedule in _scheduleViewModels)
+                {
+                    await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule()); //.GetAwaiter().GetResult();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
             }
         }
     }

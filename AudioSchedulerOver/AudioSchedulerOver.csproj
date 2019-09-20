@@ -105,7 +105,6 @@
     <Compile Include="Converters\BoolToVisibleOrCollapsed.cs" />
     <Compile Include="Converters\InverseBoolToVisibilityConverter.cs" />
     <Compile Include="DataAccess\DataContext.cs" />
-    <Compile Include="Enum\DayEnum.cs" />
     <Compile Include="Enum\IntervalEnum.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Model\Audio.cs" />

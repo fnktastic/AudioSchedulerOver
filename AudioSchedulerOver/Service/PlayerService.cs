@@ -1,4 +1,5 @@
-﻿using AudioSchedulerOver.Model;
+﻿using AudioSchedulerOver.Logging;
+using AudioSchedulerOver.Model;
 using AudioSession;
 using System;
 using System.Collections.Generic;
@@ -31,29 +32,50 @@ namespace AudioSchedulerOver.Service
 
         public void OpenAndPlay(string path)
         {
-            Close();
+            try
+            {
+                Close();
 
-            var uri = new Uri(path);
+                var uri = new Uri(path);
 
-            _mediaPlayer.Open(uri);
+                _mediaPlayer.Open(uri);
 
-            Play();
+                Play();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         public void OpenAndPlay(Audio audio)
         {
-            Close();
+            try
+            {
+                Close();
 
-            var uri = new Uri(audio.FilePath);
-            
-            _mediaPlayer.Open(uri);
+                var uri = new Uri(audio.FilePath);
 
-            Play();
+                _mediaPlayer.Open(uri);
+
+                Play();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         public void Play()
         {
-            _mediaPlayer.Play();
+            try
+            {
+                _mediaPlayer.Play();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
         }
 
         public void Pause()
@@ -63,8 +85,15 @@ namespace AudioSchedulerOver.Service
 
         private void _mediaPlayer_MediaEnded(object sender, EventArgs e)
         {
-            if (ApplicationVolumeProvider != null)
-                ApplicationVolumeProvider.SetApplicationVolume(100);
+            try
+            {
+                if (ApplicationVolumeProvider != null)
+                    ApplicationVolumeProvider.SetApplicationVolume(100);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", ex.Message, ex.StackTrace, ex.Data));
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AudioSchedulerOver.DataAccess;
+using AudioSchedulerOver.Logging;
 using AudioSchedulerOver.Model;
 using System;
 using System.Collections.Generic;
@@ -27,39 +28,61 @@ namespace AudioSchedulerOver.Repository
 
         public Setting Get(string key)
         {
-            return _context.Settings.ToList().FirstOrDefault(x => x.Key == key);
+            try
+            {
+                return _context.Settings.ToList().FirstOrDefault(x => x.Key == key);
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+                return null;
+            }
         }
 
         public async Task Update(string key, string value)
         {
-            if (value == null)
-                value = string.Empty;
-
-            var dbEntry = _context.Settings.FirstOrDefault(x => x.Key == key);
-            if (dbEntry != null)
+            try
             {
-                dbEntry.Value = value;
+                if (value == null)
+                    value = string.Empty;
 
-                await _context.SaveChangesAsync();
+                var dbEntry = _context.Settings.FirstOrDefault(x => x.Key == key);
+                if (dbEntry != null)
+                {
+                    dbEntry.Value = value;
+
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
             }
         }
 
         public void Init()
         {
-            var appName = Get("appName");
-            if (appName == null)
+            try
             {
-                var i = new Setting() { Id = 1, Key = "appName", Value = "<app name>" };
-                _context.Settings.Add(i);
-                _context.SaveChanges();
-            }
+                var appName = Get("appName");
+                if (appName == null)
+                {
+                    var i = new Setting() { Id = 1, Key = "appName", Value = "<app name>" };
+                    _context.Settings.Add(i);
+                    _context.SaveChanges();
+                }
 
-            var tagetVolume = Get("tagetVolume");
-            if (tagetVolume == null)
+                var tagetVolume = Get("tagetVolume");
+                if (tagetVolume == null)
+                {
+                    var o = new Setting() { Id = 2, Key = "tagetVolume", Value = "27" };
+                    _context.Settings.Add(o);
+                    _context.SaveChanges();
+                }
+            }
+            catch (Exception e)
             {
-                var o = new Setting() { Id = 2, Key = "tagetVolume", Value = "27" };
-                _context.Settings.Add(o);
-                _context.SaveChanges();
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
             }
         }
     }
