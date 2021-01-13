@@ -59,6 +59,43 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
+        private int _hours;
+        private int _minutes;
+        private int _seconds;
+
+        public int Hours
+        {
+            get { return _hours; }
+            set
+            {
+                _hours = value;
+                RaisePropertyChanged(nameof(Hours));
+                UpdateTimeSpan();
+            }
+        }
+
+        public int Minutes
+        {
+            get { return _minutes; }
+            set
+            {
+                _minutes = value;
+                RaisePropertyChanged(nameof(Minutes));
+                UpdateTimeSpan();
+            }
+        }
+
+        public int Seconds
+        {
+            get { return _seconds; }
+            set
+            {
+                _seconds = value;
+                RaisePropertyChanged(nameof(Seconds));
+                UpdateTimeSpan();
+            }
+        }
+
         private bool _isActive;
         public bool IsActive
         {
@@ -66,7 +103,18 @@ namespace AudioSchedulerOver.ViewModel
             set
             {
                 _isActive = value;
-                RaisePropertyChanged(nameof(IsActive)); 
+                RaisePropertyChanged(nameof(IsActive));
+            }
+        }
+
+        private bool _repeatedly;
+        public bool Repeatedly
+        {
+            get { return _repeatedly; }
+            set
+            {
+                _repeatedly = value;
+                RaisePropertyChanged(nameof(Repeatedly));
             }
         }
 
@@ -79,8 +127,15 @@ namespace AudioSchedulerOver.ViewModel
                 Interval = this.Interval,
                 IntervalEnum = this.IntervalEnum,
                 StartDate = this.StartDate.Ticks,
-                DayEnum = this.DayEnum
+                DayEnum = this.DayEnum,
+                IsActive = this.IsActive,
+                Repeatedly = this.Repeatedly
             };
+        }
+
+        private void UpdateTimeSpan()
+        {
+            StartDate = new TimeSpan(_hours, _minutes, _seconds);
         }
     }
 }

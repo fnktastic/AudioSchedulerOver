@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AudioSession
@@ -23,7 +24,7 @@ namespace AudioSession
             catch { }
         }
 
-        public void SetApplicationVolume(float level)
+        public void SetApplicationVolume(float level, int fadingSpeed = 0)
         {
             try
             {
@@ -33,6 +34,9 @@ namespace AudioSession
                 {
                     for (float i = 0; i < level; i++)
                     {
+                        if (fadingSpeed > 0)
+                            Thread.Sleep(fadingSpeed);
+
                         SetApplicationVolume(_processId, i);
                     }
 
@@ -43,6 +47,9 @@ namespace AudioSession
                 {
                     for (float i = currentVolume; i > level; i--)
                     {
+                        if (fadingSpeed > 0)
+                            Thread.Sleep(fadingSpeed);
+
                         SetApplicationVolume(_processId, i);
                     }
 

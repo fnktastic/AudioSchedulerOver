@@ -79,6 +79,14 @@ namespace AudioSchedulerOver.Repository
                     _context.Settings.Add(o);
                     _context.SaveChanges();
                 }
+
+                var fadingSpeed = Get("fadingSpeed");
+                if (fadingSpeed == null)
+                {
+                    var o = new Setting() { Id = 3, Key = "fadingSpeed", Value = "0" };
+                    _context.Settings.Add(o);
+                    _context.SaveChanges();
+                }
             }
             catch (Exception e)
             {

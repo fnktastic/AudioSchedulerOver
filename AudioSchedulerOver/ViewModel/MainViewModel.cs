@@ -12,6 +12,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,12 +24,12 @@ namespace AudioSchedulerOver.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
-        private readonly Context _context;
+        private Context _context;
         private readonly PlayerService _playerService;
         private readonly AudioPlaybackScheduler _audioPlaybackScheduler;
-        private readonly IAudioRepository _audioRepository;
-        private readonly IScheduleRepository _scheduleRepository;
-        private readonly ISettingRepository _settingRepository;
+        private IAudioRepository _audioRepository;
+        private IScheduleRepository _scheduleRepository;
+        private ISettingRepository _settingRepository;
 
         private ApplicationVolumeProvider _applicationVolumeProvider;
 
@@ -36,11 +37,23 @@ namespace AudioSchedulerOver.ViewModel
 
         private const int AUTOCHECK_INTERVAL = 3;
 
-        private bool isConnectSuccess;
+        private readonly double autoReloadInterval = 15;
+
+        private const string STARTUP_CONFIGS = "startupConfigs.txt";
+
+        private const int DEFAULT_REPEAT_INTERVAL = 1;
 
         private bool isAutoRunFired = false;
 
-        private readonly Timer connectionTimer;
+        public static int Fading_Speed = 0;
+
+        private readonly DispatcherTimer connectionTimer = new DispatcherTimer();
+
+        private readonly DispatcherTimer configTimer = new DispatcherTimer();
+
+        private readonly string databasePath;
+
+        private readonly object _locker = new object();
 
         #region properties
         private ObservableCollection<Audio> _audios;
@@ -73,6 +86,18 @@ namespace AudioSchedulerOver.ViewModel
             {
                 _targetVolume = value;
                 RaisePropertyChanged(nameof(TargetVolunme));
+            }
+        }
+
+        private int _fadingSpeed;
+        public int FadingSpeed
+        {
+            get { return _fadingSpeed; }
+            set
+            {
+                _fadingSpeed = value;
+                Fading_Speed = _fadingSpeed;
+                RaisePropertyChanged(nameof(FadingSpeed));
             }
         }
 
@@ -119,20 +144,60 @@ namespace AudioSchedulerOver.ViewModel
                 RaisePropertyChanged(nameof(SelectedInterval));
             }
         }
+
+        private bool _isConnectSuccess;
+        public bool IsConnectSuccess
+        {
+            get { return _isConnectSuccess; }
+            set
+            {
+                _isConnectSuccess = value;
+                RaisePropertyChanged(nameof(IsConnectSuccess));
+            }
+        }
+
         #endregion
 
         public MainViewModel()
         {
+            if (File.Exists(STARTUP_CONFIGS))
+            {
+                var confs = File.ReadAllLines(STARTUP_CONFIGS);
+                databasePath = confs[0];
+
+                if (Path.IsPathRooted(databasePath) == false)
+                {
+                    string userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+                    databasePath = Path.Combine(userFolder, databasePath);
+                }
+
+                autoReloadInterval = double.Parse(confs[1], System.Globalization.NumberStyles.Any);
+            }
+
+            var mediaPlayer = new MediaPlayer();
+
+            _playerService = new PlayerService(mediaPlayer);
+
+            _audioPlaybackScheduler = new AudioPlaybackScheduler();
+
+            Init();
+
+            InitTimers();
+        }
+
+        private void Init()
+        {
+            isAutoRunFired = false;
+
             _context = new Context();
             _audioRepository = new AudioRepository(_context);
             _scheduleRepository = new ScheduleRepository(_context);
             _settingRepository = new SettingRepository(_context);
             _settingRepository.Init();
 
-            var mediaPlayer = new MediaPlayer();
-            _audioPlaybackScheduler = new AudioPlaybackScheduler();
-            _playerService = new PlayerService(mediaPlayer);
-            Audios = new ObservableCollection<Audio>(_audioRepository.GetAll());
+            var audios = _audioRepository.GetAll();
+            Audios = new ObservableCollection<Audio>(audios);
             ScheduleViewModels = new ObservableCollection<ScheduleViewModel>
                 (
                 _scheduleRepository
@@ -142,12 +207,38 @@ namespace AudioSchedulerOver.ViewModel
 
             TargetVolunme = int.Parse(GetSetting("tagetVolume"));
             AppName = GetSetting("appName");
+            FadingSpeed = int.Parse(GetSetting("fadingSpeed"));
+        }
 
-            connectionTimer = new Timer(x =>
+        private void InitTimers()
+        {
+            connectionTimer.Interval = TimeSpan.FromSeconds(AUTOCHECK_INTERVAL);
+            connectionTimer.Tick += new EventHandler((object s, EventArgs a) =>
             {
-                EstablishConnection();
+                lock (_locker)
+                {
+                    EstablishConnection();
+                }
+            });
+            connectionTimer.Start();
 
-            }, null, TimeSpan.FromSeconds(AUTOCHECK_INTERVAL), TimeSpan.FromSeconds(AUTOCHECK_INTERVAL));
+            configTimer.Interval = TimeSpan.FromMinutes(autoReloadInterval);
+            configTimer.Tick += new EventHandler((object s, EventArgs a) =>
+            {
+                lock (_locker)
+                {
+                    UpdateConfigs();
+
+                    SaveData();
+
+                    DisableSchedules();
+
+                    Init();
+
+                    EnableSchedules();
+                }
+            });
+            configTimer.Start();
         }
 
         private RelayCommand<DragEventArgs> _dropAudioCommand;
@@ -231,9 +322,10 @@ namespace AudioSchedulerOver.ViewModel
                 {
                     Audio = audio,
                     ScheduleId = Guid.NewGuid(),
-                    Interval = 0,
-                    IntervalEnum = IntervalEnum.Second,
-                    StartDate = TimeSpan.Zero
+                    Interval = DEFAULT_REPEAT_INTERVAL,
+                    IntervalEnum = IntervalEnum.Hour,
+                    StartDate = TimeSpan.Zero,
+                    Repeatedly = true,
                 };
 
                 ScheduleViewModels.Add(scheduleViewModel);
@@ -250,7 +342,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                if (isConnectSuccess == false)
+                if (IsConnectSuccess == false)
                 {
                     ErrorMessage = "Error. Connect to the media player first.";
                     return;
@@ -263,21 +355,26 @@ namespace AudioSchedulerOver.ViewModel
                 Guid scheduleId = scheduleViewModel.ScheduleId;
                 DayOfWeek dayEnum = scheduleViewModel.DayEnum;
 
-                _audioPlaybackScheduler.Interval(interval, () =>
+                _audioPlaybackScheduler.Interval(interval, async () =>
                 {
-                    Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new System.Action(() =>
+                    await Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new System.Action(() =>
                     {
                         try
                         {
-                            _applicationVolumeProvider.SetApplicationVolume(_targetVolume);
-                            _playerService.OpenAndPlay(audio);
+                            var t = Task.Factory.StartNew(() =>
+                            {
+                                _applicationVolumeProvider.SetApplicationVolume(_targetVolume, _fadingSpeed);
+                                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => _playerService.OpenAndPlay(audio)));
+                            });
+
+                            Task.WhenAny(t).ConfigureAwait(false);
                         }
                         catch (Exception e)
                         {
                             Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
                         }
                     }));
-                }, intervalEnum, scheduleId, dayEnum, start);
+                }, intervalEnum, scheduleId, dayEnum, scheduleViewModel.Repeatedly, start);
 
                 scheduleViewModel.IsActive = true;
             }
@@ -335,6 +432,20 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
+        private RelayCommand<Audio> _stopPlayingScheduleCommand;
+        public RelayCommand<Audio> StopPlayingScheduleCommand => _stopPlayingScheduleCommand ?? (_stopPlayingScheduleCommand = new RelayCommand<Audio>(StopPlayingSchedule));
+        private void StopPlayingSchedule(Audio audio)
+        {
+            try
+            {
+                _playerService.Pause();
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+            }
+        }
+
         private RelayCommand<ScheduleViewModel> _saveScheduleCommand;
         public RelayCommand<ScheduleViewModel> SaveScheduleCommand => _saveScheduleCommand ?? (_saveScheduleCommand = new RelayCommand<ScheduleViewModel>(SaveSchedule));
         private async void SaveSchedule(ScheduleViewModel scheduleViewModel)
@@ -366,7 +477,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
 
-                Logging.Logger.Log.Error(e);
+                Logger.Log.Error(e);
 
                 UpdateConfigs();
 
@@ -394,6 +505,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 UpdateSetting("appName", _appName);
                 UpdateSetting("tagetVolume", _targetVolume.ToString());
+                UpdateSetting("fadingSpeed", FadingSpeed.ToString());
             }
             catch (Exception e)
             {
@@ -434,12 +546,9 @@ namespace AudioSchedulerOver.ViewModel
                 {
                     ErrorMessage = "Cant find the target app by given name. Check exact name of the app and try again.";
                     SuccessMessage = string.Empty;
-                    isConnectSuccess = false;
+                    IsConnectSuccess = false;
 
-                    foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == true))
-                    {
-                        StopScheduledPlayback(scheduleViewModel);
-                    }
+                    DisableSchedules();
 
                     isAutoRunFired = false;
 
@@ -455,20 +564,14 @@ namespace AudioSchedulerOver.ViewModel
                     float? appVolume = _applicationVolumeProvider.GetApplicationVolume();
                     SuccessMessage = string.Format("App {0} is detected", _appName);
                     ErrorMessage = string.Empty;
-                    isConnectSuccess = true;
+                    IsConnectSuccess = true;
 
                     if (isAutoRunFired == false)
                     {
-                        foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == false))
-                        {
-                            StartScheduledPlayback(scheduleViewModel);
-                        }
+                        EnableSchedules();
 
                         isAutoRunFired = true;
                     }
-
-                    //connectionTimer.Change(Timeout.Infinite, Timeout.Infinite);
-
                     return true;
                 }
 
@@ -480,6 +583,28 @@ namespace AudioSchedulerOver.ViewModel
                 return false;
             }
         }
+
+        private void EnableSchedules()
+        {
+            var schedules = _scheduleRepository.GetAll();
+
+            foreach (var scheduleViewModel in ScheduleViewModels)
+            {
+                if (schedules.Any(y => y.Id == scheduleViewModel.ScheduleId && y.IsActive))
+                {
+                    StartScheduledPlayback(scheduleViewModel);
+                }
+            }
+        }
+
+        private void DisableSchedules()
+        {
+            foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == true))
+            {
+                StopScheduledPlayback(scheduleViewModel);
+            }
+        }
+
         private bool IsProcessExist(string processName)
         {
             try
@@ -504,7 +629,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 foreach (var schedule in _scheduleViewModels)
                 {
-                    await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule()); //.GetAwaiter().GetResult();
+                    await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule());
                 }
             }
             catch (Exception e)

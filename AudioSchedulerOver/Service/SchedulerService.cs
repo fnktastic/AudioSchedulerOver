@@ -54,7 +54,7 @@ namespace AudioSchedulerOver.Service
                     task.Invoke();
                 }, null, timeToGo.Ticks / 10_000, period.Ticks / 10_000);
 
-                _timers.Add(scheduleId, timer);
+                AddTimerSafe(scheduleId, timer);
             }
             catch (Exception e)
             {
@@ -70,7 +70,7 @@ namespace AudioSchedulerOver.Service
 
                 targetDate = targetDate.Add(startAt.Value);
 
-                if (DateTime.Now.DayOfWeek == dayEnum)
+                //if (DateTime.Now.DayOfWeek == dayEnum)
                 {
                     targetDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0); // start of te day
 
@@ -89,7 +89,7 @@ namespace AudioSchedulerOver.Service
                     task.Invoke();
                 }, null, timeToGo, TimeSpan.FromHours(intervalInHour));
 
-                _timers.Add(scheduleId, timer);
+                AddTimerSafe(scheduleId, timer);
             }
             catch (Exception e)
             {
@@ -97,13 +97,27 @@ namespace AudioSchedulerOver.Service
             }
         }
 
-        public void ScheduleTask(double intervalInHour, Action task, Guid scheduleId, DayOfWeek dayEnum, TimeSpan? startAt = null)
+        private void AddTimerSafe(Guid scheduleId, Timer timer)
         {
-            if (intervalInHour == 0)
-                ScheduleTaskOnce(intervalInHour, task, scheduleId, dayEnum, startAt);
+            if (_timers.ContainsKey(scheduleId))
+            {
+                KillSchedule(scheduleId);
+            }
 
-            if (intervalInHour > 0)
+            _timers.Add(scheduleId, timer);
+        }
+
+        public void ScheduleTask(double intervalInHour, Action task, Guid scheduleId, DayOfWeek dayEnum, bool repeatedly, TimeSpan? startAt = null)
+        {
+            if (repeatedly == false)
+            {
+                ScheduleTaskOnce(intervalInHour, task, scheduleId, dayEnum, startAt);
+            }
+
+            if (repeatedly)
+            {
                 ScheduleRepeatedTask(intervalInHour, task, scheduleId, dayEnum, startAt);
+            }
         }
 
         public void KillSchedule(Guid scheduleId)
@@ -114,9 +128,11 @@ namespace AudioSchedulerOver.Service
                 {
                     var timer = _timers[scheduleId];
 
+                    _timers.Remove(scheduleId);
+
                     timer.Change(Timeout.Infinite, Timeout.Infinite);
 
-                    _timers.Remove(scheduleId);
+                    timer.Dispose();
                 }
             }
             catch (Exception e)

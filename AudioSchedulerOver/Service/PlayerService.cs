@@ -1,11 +1,10 @@
 ﻿using AudioSchedulerOver.Logging;
 using AudioSchedulerOver.Model;
+using AudioSchedulerOver.ViewModel;
 using AudioSession;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Media;
 
 namespace AudioSchedulerOver.Service
@@ -88,7 +87,7 @@ namespace AudioSchedulerOver.Service
             try
             {
                 if (ApplicationVolumeProvider != null)
-                    ApplicationVolumeProvider.SetApplicationVolume(100);
+                    ApplicationVolumeProvider.SetApplicationVolume(100, MainViewModel.Fading_Speed);
             }
             catch (Exception ex)
             {

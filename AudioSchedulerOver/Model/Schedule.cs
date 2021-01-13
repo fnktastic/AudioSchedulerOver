@@ -20,18 +20,29 @@ namespace AudioSchedulerOver.Model
 
         public long StartDate { get; set; }
 
+        public bool IsActive { get; set; }
+
+        public bool Repeatedly { get; set; }
+
         public Audio Audio { get; set; }
 
         public ScheduleViewModel ConvertToScheduleViewModel()
         {
+            var timeSpan = TimeSpan.FromTicks(this.StartDate);
+
             return new ScheduleViewModel()
             {
                 Audio = this.Audio,
                 Interval = this.Interval,
                 IntervalEnum = this.IntervalEnum,
                 ScheduleId = this.Id,
-                StartDate = TimeSpan.FromTicks(this.StartDate),
-                DayEnum = this.DayEnum
+                StartDate = timeSpan,
+                Hours = timeSpan.Hours,
+                Minutes = timeSpan.Minutes,
+                Seconds = timeSpan.Seconds,
+                DayEnum = this.DayEnum,
+                IsActive = this.IsActive,
+                Repeatedly = this.Repeatedly
             };
         }
     }
