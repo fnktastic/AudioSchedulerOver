@@ -12,9 +12,7 @@ namespace AudioSchedulerOver.Repository
 {
     public interface IScheduleRepository
     {
-        IEnumerable<Schedule> GetAll();
-
-        Task AddAsync(Schedule schedule);
+        IEnumerable<Schedule> GetAll(string machineId = null);
 
         Task RemoveAsync(Schedule schedule);
 
@@ -29,7 +27,7 @@ namespace AudioSchedulerOver.Repository
             _context = context;
         }
 
-        public async Task AddAsync(Schedule schedule)
+        private async Task AddAsync(Schedule schedule)
         {
             try
             {
@@ -43,10 +41,15 @@ namespace AudioSchedulerOver.Repository
             }
         }
 
-        public IEnumerable<Schedule> GetAll()
+        public IEnumerable<Schedule> GetAll(string machineId = null)
         {
             try
             {
+                if(machineId != null)
+                {
+                    return _context.Schedules.Where(x => x.MachineId == machineId).Include(x => x.Audio).ToList();
+                }
+
                 return _context.Schedules.Include(x => x.Audio).ToList();
             }
             catch (Exception e)

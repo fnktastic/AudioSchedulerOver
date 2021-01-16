@@ -14,7 +14,7 @@
         xmlns:converter="clr-namespace:AudioSchedulerOver.Converters"          
         mc:Ignorable="d"
         DataContext="{Binding Main, Source={StaticResource Locator}}"
-         Title="Audio Scheduler | 1.0.0.3 (.NET Core 3.1)" Height="450" Width="1200">
+         Title="Audio Scheduler | 1.0.0.3 (.NET 4.7)" Height="450" Width="1200">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <cmd:EventToCommand Command="{Binding OnAppCloseCommand}" PassEventArgsToCommand="True" />
@@ -43,11 +43,18 @@
             <ColumnDefinition Width="275" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <GroupBox Header="Audios" Grid.Row="0" Grid.Column="0">
+        <TextBox Text="{Binding AudiosSearchTerm, UpdateSourceTrigger=PropertyChanged}" 
+                                 VerticalContentAlignment="Center"
+                                 Grid.Row="0" Grid.Column="0"
+                                 Style="{DynamicResource SearchMetroTextBox}"
+                                 Margin="0 0 0 2"
+                                 Controls:TextBoxHelper.Watermark="filter audios" />
+        <GroupBox Header="Audios" Grid.Row="1" Grid.Column="0">
             <ListView AllowDrop="True"
-                  ItemsSource="{Binding Audios}">
+                  ItemsSource="{Binding FilteredAudiosCollection}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="Drop">
                         <cmd:EventToCommand Command="{Binding DropAudioCommand}" PassEventArgsToCommand="True" />
@@ -82,7 +89,7 @@
             </ListView>
         </GroupBox>
 
-        <GroupBox Margin="3 0 0 0" Header="Schedule" Grid.Row="0" Grid.Column="1">
+        <GroupBox Margin="3 0 0 0" Header="Schedule" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
             <ListView  ItemsSource="{Binding ScheduleViewModels}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -172,7 +179,7 @@
             </ListView>
         </GroupBox>
 
-        <GroupBox Margin="3 0 0 0" Header="Music Player Configs" Grid.Row="0" Grid.Column="2">
+        <GroupBox Margin="3 0 0 0" Header="Music Player Configs" Grid.Row="0" Grid.RowSpan="2" Grid.Column="2">
             <StackPanel>
                 <TextBlock Text="Target Music Player Name" />
                 <TextBox Text="{Binding AppName, UpdateSourceTrigger=PropertyChanged}" />

@@ -1,5 +1,7 @@
 ﻿using AudioSchedulerOver.DataAccess;
 using AudioSchedulerOver.Enum;
+using AudioSchedulerOver.Exceptions;
+using AudioSchedulerOver.Helper;
 using AudioSchedulerOver.Logging;
 using AudioSchedulerOver.Model;
 using AudioSchedulerOver.Repository;
@@ -9,6 +11,7 @@ using AudioSession;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Diagnostics;
@@ -17,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -30,6 +34,7 @@ namespace AudioSchedulerOver.ViewModel
         private IAudioRepository _audioRepository;
         private IScheduleRepository _scheduleRepository;
         private ISettingRepository _settingRepository;
+        private IMachineRepository _machineRepository;
 
         private ApplicationVolumeProvider _applicationVolumeProvider;
 
@@ -75,6 +80,17 @@ namespace AudioSchedulerOver.ViewModel
             {
                 _scheduleViewModels = value;
                 RaisePropertyChanged(nameof(ScheduleViewModels));
+            }
+        }
+
+        private Machine _machine;
+        public Machine Machine
+        {
+            get { return _machine; }
+            set
+            {
+                _machine = value;
+                RaisePropertyChanged(nameof(Machine));
             }
         }
 
@@ -156,6 +172,36 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
+        private string _audiosSearchTerm;
+        public string AudiosSearchTerm
+        {
+            get { return _audiosSearchTerm; }
+            set
+            {
+                _audiosSearchTerm = value;
+                RaisePropertyChanged(nameof(AudiosSearchTerm));
+
+                if (FilteredAudiosCollection != null)
+                    FilteredAudiosCollection.Refresh();
+            }
+        }
+
+        private ListCollectionView _filteredAudiosCollection;
+        public ListCollectionView FilteredAudiosCollection
+        {
+            get => _filteredAudiosCollection;
+            set
+            {
+                if (Equals(_filteredAudiosCollection, value)) return;
+                _filteredAudiosCollection = value;
+                RaisePropertyChanged(nameof(FilteredAudiosCollection));
+            }
+        }
+
+        public ListCollectionView GetAudiosCollectionView(IEnumerable<Audio> audios)
+        {
+            return (ListCollectionView)CollectionViewSource.GetDefaultView(audios);
+        }
         #endregion
 
         public MainViewModel()
@@ -194,6 +240,7 @@ namespace AudioSchedulerOver.ViewModel
             _audioRepository = new AudioRepository(_context);
             _scheduleRepository = new ScheduleRepository(_context);
             _settingRepository = new SettingRepository(_context);
+            _machineRepository = new MachineRepository(_context);
             _settingRepository.Init();
 
             var audios = _audioRepository.GetAll();
@@ -208,6 +255,18 @@ namespace AudioSchedulerOver.ViewModel
             TargetVolunme = int.Parse(GetSetting("tagetVolume"));
             AppName = GetSetting("appName");
             FadingSpeed = int.Parse(GetSetting("fadingSpeed"));
+
+            FilteredAudiosCollection = GetAudiosCollectionView(_audios);
+            FilteredAudiosCollection.Filter += FilteredAudioCollection_Filter;
+
+            try
+            {
+                Machine = _machineRepository.SignIn(MachineId.Get).GetAwaiter().GetResult();
+            }
+            catch(StationInactiveException)
+            {
+                Application.Current.Shutdown(-1);
+            }
         }
 
         private void InitTimers()
@@ -240,6 +299,35 @@ namespace AudioSchedulerOver.ViewModel
             });
             configTimer.Start();
         }
+
+        #region filters
+        private bool FilteredAudioCollection_Filter(object obj)
+        {
+            try
+            {
+                var audio = obj as Audio;
+
+                if (string.IsNullOrWhiteSpace(_audiosSearchTerm))
+                {
+                    return true;
+                }
+
+                if (audio.Name.ToUpper().Contains(_audiosSearchTerm.ToUpper()) ||
+                    audio.FilePath.ToUpper().Contains(_audiosSearchTerm.ToUpper()))
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.Error(string.Format("FilteredGroupCollection_Filter exception {0} {1} {2}", ex.Message, ex.StackTrace, ex.Data));
+                return false;
+            }
+
+        }
+        #endregion
 
         private RelayCommand<DragEventArgs> _dropAudioCommand;
         public RelayCommand<DragEventArgs> DropAudioCommand => _dropAudioCommand ?? (_dropAudioCommand = new RelayCommand<DragEventArgs>(DropAudio));

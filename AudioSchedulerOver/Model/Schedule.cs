@@ -24,7 +24,11 @@ namespace AudioSchedulerOver.Model
 
         public bool Repeatedly { get; set; }
 
+        public Guid AudioId { get; set; }
         public Audio Audio { get; set; }
+
+        public string MachineId { get; set; }
+        public Machine Machine { get; set; }
 
         public ScheduleViewModel ConvertToScheduleViewModel()
         {
@@ -42,7 +46,7 @@ namespace AudioSchedulerOver.Model
                 Seconds = timeSpan.Seconds,
                 DayEnum = this.DayEnum,
                 IsActive = this.IsActive,
-                Repeatedly = this.Repeatedly
+                Repeatedly = this.Repeatedly,
             };
         }
     }

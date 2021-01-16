@@ -1,4 +1,5 @@
 ﻿using AudioSchedulerOver.Enum;
+using AudioSchedulerOver.Helper;
 using AudioSchedulerOver.Model;
 using GalaSoft.MvvmLight;
 using System;
@@ -129,7 +130,8 @@ namespace AudioSchedulerOver.ViewModel
                 StartDate = this.StartDate.Ticks,
                 DayEnum = this.DayEnum,
                 IsActive = this.IsActive,
-                Repeatedly = this.Repeatedly
+                Repeatedly = this.Repeatedly,
+                MachineId = MachineId.Get
             };
         }
 

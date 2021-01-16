@@ -15,7 +15,7 @@ namespace AudioSchedulerOver.DataAccess
         }
 
         public DbSet<Audio> Audios { get; set; }
-
+        public DbSet<Machine> Machines { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<Setting> Settings { get; set; }
     }
