@@ -50,6 +50,8 @@ namespace AudioSchedulerOver.ViewModel
 
         private bool isAutoRunFired = false;
 
+        private bool loggedIn = false;
+
         public static int Fading_Speed = 0;
 
         private readonly DispatcherTimer connectionTimer = new DispatcherTimer();
@@ -227,12 +229,12 @@ namespace AudioSchedulerOver.ViewModel
 
             _audioPlaybackScheduler = new AudioPlaybackScheduler();
 
-            Init();
+            Task.WhenAll(Init());
 
             InitTimers();
         }
 
-        private void Init()
+        private async Task Init()
         {
             isAutoRunFired = false;
 
@@ -261,7 +263,11 @@ namespace AudioSchedulerOver.ViewModel
 
             try
             {
-                Machine = _machineRepository.SignIn(MachineId.Get).GetAwaiter().GetResult();
+                if (loggedIn == false)
+                {
+                    Machine = await _machineRepository.SignIn(MachineId.Get);
+                    loggedIn = true;
+                }
             }
             catch(StationInactiveException)
             {
@@ -292,7 +298,7 @@ namespace AudioSchedulerOver.ViewModel
 
                     DisableSchedules();
 
-                    Init();
+                    Init().Wait();
 
                     EnableSchedules();
                 }

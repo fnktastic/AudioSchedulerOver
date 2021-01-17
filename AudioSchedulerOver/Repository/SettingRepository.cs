@@ -1,4 +1,5 @@
 ﻿using AudioSchedulerOver.DataAccess;
+using AudioSchedulerOver.Helper;
 using AudioSchedulerOver.Logging;
 using AudioSchedulerOver.Model;
 using System;
@@ -30,7 +31,7 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                return _context.Settings.ToList().FirstOrDefault(x => x.Key == key);
+                return _context.Settings.Where(x => x.MachineId == MachineId.Get).ToList().FirstOrDefault(x => x.Key == key);
             }
             catch (Exception e)
             {
@@ -46,7 +47,7 @@ namespace AudioSchedulerOver.Repository
                 if (value == null)
                     value = string.Empty;
 
-                var dbEntry = _context.Settings.FirstOrDefault(x => x.Key == key);
+                var dbEntry = _context.Settings.Where(x => x.MachineId == MachineId.Get).FirstOrDefault(x => x.Key == key);
                 if (dbEntry != null)
                 {
                     dbEntry.Value = value;
@@ -67,7 +68,7 @@ namespace AudioSchedulerOver.Repository
                 var appName = Get("appName");
                 if (appName == null)
                 {
-                    var i = new Setting() { Id = 1, Key = "appName", Value = "<app name>" };
+                    var i = new Setting() { Id = Guid.NewGuid(), Key = "appName", Value = "<app name>", MachineId = MachineId.Get };
                     _context.Settings.Add(i);
                     _context.SaveChanges();
                 }
@@ -75,7 +76,7 @@ namespace AudioSchedulerOver.Repository
                 var tagetVolume = Get("tagetVolume");
                 if (tagetVolume == null)
                 {
-                    var o = new Setting() { Id = 2, Key = "tagetVolume", Value = "27" };
+                    var o = new Setting() { Id = Guid.NewGuid(), Key = "tagetVolume", Value = "27", MachineId = MachineId.Get };
                     _context.Settings.Add(o);
                     _context.SaveChanges();
                 }
@@ -83,7 +84,7 @@ namespace AudioSchedulerOver.Repository
                 var fadingSpeed = Get("fadingSpeed");
                 if (fadingSpeed == null)
                 {
-                    var o = new Setting() { Id = 3, Key = "fadingSpeed", Value = "0" };
+                    var o = new Setting() { Id = Guid.NewGuid(), Key = "fadingSpeed", Value = "0", MachineId = MachineId.Get };
                     _context.Settings.Add(o);
                     _context.SaveChanges();
                 }

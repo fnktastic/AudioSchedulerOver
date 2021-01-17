@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29020.237
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioSchedulerOver", "AudioSchedulerOver\AudioSchedulerOver.csproj", "{BBF87714-64D9-4905-9643-0540CE395BE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioSession", "AudioSession\AudioSession.csproj", "{F98EF798-0D76-4B7D-A599-348C9C91EDA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AudioSession", "AudioSession\AudioSession.csproj", "{F98EF798-0D76-4B7D-A599-348C9C91EDA3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
