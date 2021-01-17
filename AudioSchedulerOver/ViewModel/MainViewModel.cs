@@ -8,6 +8,7 @@ using AudioSchedulerOver.Repository;
 using AudioSchedulerOver.Scheduler;
 using AudioSchedulerOver.Service;
 using AudioSession;
+using CommonServiceLocator;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;
@@ -28,7 +29,6 @@ namespace AudioSchedulerOver.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
-        private Context _context;
         private readonly PlayerService _playerService;
         private readonly AudioPlaybackScheduler _audioPlaybackScheduler;
         private IAudioRepository _audioRepository;
@@ -74,14 +74,14 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private ObservableCollection<ScheduleViewModel> _scheduleViewModels;
-        public ObservableCollection<ScheduleViewModel> ScheduleViewModels
+        private ObservableCollection<ScheduleViewModel> _schedules;
+        public ObservableCollection<ScheduleViewModel> Schedules
         {
-            get { return _scheduleViewModels; }
+            get { return _schedules; }
             set
             {
-                _scheduleViewModels = value;
-                RaisePropertyChanged(nameof(ScheduleViewModels));
+                _schedules = value;
+                RaisePropertyChanged(nameof(Schedules));
             }
         }
 
@@ -204,9 +204,10 @@ namespace AudioSchedulerOver.ViewModel
         {
             return (ListCollectionView)CollectionViewSource.GetDefaultView(audios);
         }
+
         #endregion
 
-        public MainViewModel()
+        public MainViewModel(IAudioRepository audioRepository, IScheduleRepository scheduleRepository, IMachineRepository machineRepository, ISettingRepository settingRepository)
         {
             if (File.Exists(STARTUP_CONFIGS))
             {
@@ -223,6 +224,11 @@ namespace AudioSchedulerOver.ViewModel
                 autoReloadInterval = double.Parse(confs[1], System.Globalization.NumberStyles.Any);
             }
 
+            _audioRepository = audioRepository;
+            _scheduleRepository = scheduleRepository;
+            _settingRepository = settingRepository;
+            _machineRepository = machineRepository;
+
             var mediaPlayer = new MediaPlayer();
 
             _playerService = new PlayerService(mediaPlayer);
@@ -230,33 +236,27 @@ namespace AudioSchedulerOver.ViewModel
             _audioPlaybackScheduler = new AudioPlaybackScheduler();
 
             Task.WhenAll(Init());
-
-            InitTimers();
         }
 
         private async Task Init()
         {
             isAutoRunFired = false;
 
-            _context = new Context();
-            _audioRepository = new AudioRepository(_context);
-            _scheduleRepository = new ScheduleRepository(_context);
-            _settingRepository = new SettingRepository(_context);
-            _machineRepository = new MachineRepository(_context);
-            _settingRepository.Init();
+            await _settingRepository.Init();
 
-            var audios = _audioRepository.GetAll();
+            var audios = await _audioRepository.GetAllAsync();
+            
             Audios = new ObservableCollection<Audio>(audios);
-            ScheduleViewModels = new ObservableCollection<ScheduleViewModel>
+            Schedules = new ObservableCollection<ScheduleViewModel>
                 (
-                _scheduleRepository
-                .GetAll()
-                .Select(x => x.ConvertToScheduleViewModel())
+                    (await _scheduleRepository
+                        .GetAllAsync())
+                        .Select(x => x.ConvertToScheduleViewModel())
                 );
 
-            TargetVolunme = int.Parse(GetSetting("tagetVolume"));
-            AppName = GetSetting("appName");
-            FadingSpeed = int.Parse(GetSetting("fadingSpeed"));
+            TargetVolunme = int.Parse(await GetSetting("tagetVolume"));
+            AppName = await GetSetting("appName");
+            FadingSpeed = int.Parse(await GetSetting("fadingSpeed"));
 
             FilteredAudiosCollection = GetAudiosCollectionView(_audios);
             FilteredAudiosCollection.Filter += FilteredAudioCollection_Filter;
@@ -273,6 +273,8 @@ namespace AudioSchedulerOver.ViewModel
             {
                 Application.Current.Shutdown(-1);
             }
+
+            InitTimers();
         }
 
         private void InitTimers()
@@ -280,27 +282,26 @@ namespace AudioSchedulerOver.ViewModel
             connectionTimer.Interval = TimeSpan.FromSeconds(AUTOCHECK_INTERVAL);
             connectionTimer.Tick += new EventHandler((object s, EventArgs a) =>
             {
-                lock (_locker)
-                {
-                    EstablishConnection();
-                }
+                EstablishConnection();
             });
             connectionTimer.Start();
 
             configTimer.Interval = TimeSpan.FromMinutes(autoReloadInterval);
-            configTimer.Tick += new EventHandler((object s, EventArgs a) =>
+            configTimer.Tick += new EventHandler(async (object s, EventArgs a) =>
             {
-                lock (_locker)
                 {
-                    UpdateConfigs();
+                    await UpdateConfigs().ContinueWith(async i => 
+                    {
+                        await SaveData().ContinueWith(async t => 
+                        {
+                            DisableSchedules();
 
-                    SaveData();
-
-                    DisableSchedules();
-
-                    Init().Wait();
-
-                    EnableSchedules();
+                            await Init().ContinueWith(j =>
+                            {
+                                EnableSchedules();
+                            });
+                        });
+                    });
                 }
             });
             configTimer.Start();
@@ -337,7 +338,7 @@ namespace AudioSchedulerOver.ViewModel
 
         private RelayCommand<DragEventArgs> _dropAudioCommand;
         public RelayCommand<DragEventArgs> DropAudioCommand => _dropAudioCommand ?? (_dropAudioCommand = new RelayCommand<DragEventArgs>(DropAudio));
-        private async void DropAudio(DragEventArgs e)
+        private void DropAudio(DragEventArgs e)
         {
             try
             {
@@ -350,7 +351,7 @@ namespace AudioSchedulerOver.ViewModel
                     {
                         var audio = Audio.CreateInstnceFromPath(file);
 
-                        await _audioRepository.AddAsync(audio);
+                        _audioRepository.AddAsync(audio).ConfigureAwait(false);
 
                         Audios.Add(audio);
                     }
@@ -392,13 +393,13 @@ namespace AudioSchedulerOver.ViewModel
 
         private RelayCommand<Audio> _removeAudioCommand;
         public RelayCommand<Audio> RemoveAudioCommand => _removeAudioCommand ?? (_removeAudioCommand = new RelayCommand<Audio>(RemoveAudio));
-        private async void RemoveAudio(Audio audio)
+        private void RemoveAudio(Audio audio)
         {
             try
             {
                 _audios.Remove(audio);
 
-                await _audioRepository.RemoveAsync(audio);
+                _audioRepository.RemoveAsync(audio).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -422,7 +423,7 @@ namespace AudioSchedulerOver.ViewModel
                     Repeatedly = true,
                 };
 
-                ScheduleViewModels.Add(scheduleViewModel);
+                Schedules.Add(scheduleViewModel);
             }
             catch (Exception e)
             {
@@ -512,13 +513,13 @@ namespace AudioSchedulerOver.ViewModel
 
         private RelayCommand<ScheduleViewModel> _removeScheduleCommand;
         public RelayCommand<ScheduleViewModel> RemoveScheduleCommand => _removeScheduleCommand ?? (_removeScheduleCommand = new RelayCommand<ScheduleViewModel>(RemoveSchedule));
-        private async void RemoveSchedule(ScheduleViewModel scheduleViewModel)
+        private void RemoveSchedule(ScheduleViewModel scheduleViewModel)
         {
             try
             {
-                ScheduleViewModels.Remove(scheduleViewModel);
+                Schedules.Remove(scheduleViewModel);
 
-                await _scheduleRepository.RemoveAsync(scheduleViewModel.ConvertToSchedule());
+                _scheduleRepository.RemoveAsync(scheduleViewModel.ConvertToSchedule()).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -542,11 +543,11 @@ namespace AudioSchedulerOver.ViewModel
 
         private RelayCommand<ScheduleViewModel> _saveScheduleCommand;
         public RelayCommand<ScheduleViewModel> SaveScheduleCommand => _saveScheduleCommand ?? (_saveScheduleCommand = new RelayCommand<ScheduleViewModel>(SaveSchedule));
-        private async void SaveSchedule(ScheduleViewModel scheduleViewModel)
+        private void SaveSchedule(ScheduleViewModel scheduleViewModel)
         {
             try
             {
-                await _scheduleRepository.UpdateAsync(scheduleViewModel.ConvertToSchedule());
+                _scheduleRepository.UpdateAsync(scheduleViewModel.ConvertToSchedule()).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -556,13 +557,13 @@ namespace AudioSchedulerOver.ViewModel
 
         private RelayCommand<object> _onAppCloseCommand;
         public RelayCommand<object> OnAppCloseCommand => _onAppCloseCommand ?? (_onAppCloseCommand = new RelayCommand<object>(OnAppClose));
-        private void OnAppClose(object o)
+        private async void OnAppClose(object o)
         {
             try
             {
-                UpdateConfigs();
+                UpdateConfigs().Wait();
 
-                SaveData();
+                await SaveData();
 
                 if (_applicationVolumeProvider != null)
                     _applicationVolumeProvider.SetApplicationVolume(100);
@@ -573,9 +574,9 @@ namespace AudioSchedulerOver.ViewModel
 
                 Logger.Log.Error(e);
 
-                UpdateConfigs();
+                UpdateConfigs().Wait();
 
-                SaveData();
+                await SaveData();
 
                 if (_applicationVolumeProvider != null)
                     _applicationVolumeProvider.SetApplicationVolume(100);
@@ -593,13 +594,13 @@ namespace AudioSchedulerOver.ViewModel
 
         }
 
-        private void UpdateConfigs()
+        private async Task UpdateConfigs()
         {
             try
             {
-                UpdateSetting("appName", _appName);
-                UpdateSetting("tagetVolume", _targetVolume.ToString());
-                UpdateSetting("fadingSpeed", FadingSpeed.ToString());
+                await UpdateSetting("appName", _appName);
+                await UpdateSetting("tagetVolume", _targetVolume.ToString());
+                await UpdateSetting("fadingSpeed", FadingSpeed.ToString());
             }
             catch (Exception e)
             {
@@ -607,7 +608,7 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private async void UpdateSetting(string key, string value)
+        private async Task UpdateSetting(string key, string value)
         {
             try
             {
@@ -619,11 +620,11 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private string GetSetting(string key)
+        private async Task <string> GetSetting(string key)
         {
             try
             {
-                return _settingRepository.Get(key).Value;
+                return (await _settingRepository.Get(key)).Value;
             }
             catch (Exception e)
             {
@@ -680,20 +681,18 @@ namespace AudioSchedulerOver.ViewModel
 
         private void EnableSchedules()
         {
-            var schedules = _scheduleRepository.GetAll();
-
-            foreach (var scheduleViewModel in ScheduleViewModels)
+            foreach (var schedule in _schedules)
             {
-                if (schedules.Any(y => y.Id == scheduleViewModel.ScheduleId && y.IsActive))
+                if (_schedules.Any(y => y.ScheduleId == schedule.ScheduleId && y.IsActive))
                 {
-                    StartScheduledPlayback(scheduleViewModel);
+                    StartScheduledPlayback(schedule);
                 }
             }
         }
 
         private void DisableSchedules()
         {
-            foreach (var scheduleViewModel in ScheduleViewModels.Where(x => x.IsActive == true))
+            foreach (var scheduleViewModel in _schedules.Where(x => x.IsActive == true))
             {
                 StopScheduledPlayback(scheduleViewModel);
             }
@@ -717,11 +716,11 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private async void SaveData()
+        private async Task SaveData()
         {
             try
             {
-                foreach (var schedule in _scheduleViewModels)
+                foreach (var schedule in _schedules)
                 {
                     await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule());
                 }

@@ -7,12 +7,13 @@ using System.Threading.Tasks;
 using AudioSchedulerOver.DataAccess;
 using System.Data.Entity;
 using AudioSchedulerOver.Logging;
+using CommonServiceLocator;
 
 namespace AudioSchedulerOver.Repository
 {
     public interface IScheduleRepository
     {
-        IEnumerable<Schedule> GetAll(string machineId = null);
+        Task<IEnumerable<Schedule>> GetAllAsync(string machineId = null);
 
         Task RemoveAsync(Schedule schedule);
 
@@ -41,16 +42,16 @@ namespace AudioSchedulerOver.Repository
             }
         }
 
-        public IEnumerable<Schedule> GetAll(string machineId = null)
+        public async Task<IEnumerable<Schedule>> GetAllAsync(string machineId = null)
         {
             try
             {
                 if(machineId != null)
                 {
-                    return _context.Schedules.Where(x => x.MachineId == machineId).Include(x => x.Audio).ToList();
+                    return await _context.Schedules.Where(x => x.MachineId == machineId).Include(x => x.Audio).ToListAsync();
                 }
 
-                return _context.Schedules.Include(x => x.Audio).ToList();
+                return await _context.Schedules.Include(x => x.Audio).ToListAsync();
             }
             catch (Exception e)
             {
@@ -63,7 +64,7 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                var dbEntry = _context.Schedules.Find(schedule.Id);
+                var dbEntry = await _context.Schedules.FindAsync(schedule.Id);
                 if (dbEntry != null)
                 {
                     _context.Entry(dbEntry).State = EntityState.Deleted;
@@ -81,7 +82,7 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                var dbEntry = _context.Schedules.Find(schedule.Id);
+                var dbEntry = await _context.Schedules.FindAsync(schedule.Id);
 
                 if (dbEntry != null)
                 {

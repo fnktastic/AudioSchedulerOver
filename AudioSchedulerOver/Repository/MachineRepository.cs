@@ -1,6 +1,7 @@
 ﻿using AudioSchedulerOver.DataAccess;
 using AudioSchedulerOver.Exceptions;
 using AudioSchedulerOver.Model;
+using CommonServiceLocator;
 using System;
 using System.Collections.Generic;
 using System.Linq;

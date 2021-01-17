@@ -1,6 +1,7 @@
 ﻿using AudioSchedulerOver.DataAccess;
 using AudioSchedulerOver.Logging;
 using AudioSchedulerOver.Model;
+using CommonServiceLocator;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -12,7 +13,7 @@ namespace AudioSchedulerOver.Repository
 {
     public interface IAudioRepository
     {
-        IEnumerable<Audio> GetAll();
+        Task<IEnumerable<Audio>> GetAllAsync();
 
         Task AddAsync(Audio audio);
 
@@ -41,11 +42,11 @@ namespace AudioSchedulerOver.Repository
             }
         }
 
-        public IEnumerable<Audio> GetAll()
+        public async Task<IEnumerable<Audio>> GetAllAsync()
         {
             try
             {
-                return _context.Audios.ToList();
+                return await _context.Audios.ToListAsync();
             }
             catch (Exception e)
             {
@@ -58,7 +59,7 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                var dbEntry = _context.Audios.Find(audio.Id);
+                var dbEntry = await _context.Audios.FindAsync(audio.Id);
                 if (dbEntry != null)
                 {
                     _context.Entry(dbEntry).State = EntityState.Deleted;
