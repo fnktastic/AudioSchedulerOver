@@ -54,7 +54,7 @@
                                  Margin="0 0 0 2"
                                  Controls:TextBoxHelper.Watermark="filter audios" />
         <GroupBox Header="Audios" Grid.Row="1" Grid.Column="0">
-            <ListView AllowDrop="True"
+            <ListView AllowDrop="True" BorderThickness="0"
                   ItemsSource="{Binding FilteredAudiosCollection}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="Drop">
@@ -91,7 +91,7 @@
         </GroupBox>
 
         <GroupBox Margin="3 0 0 0" Header="Schedule" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
-            <ListView  ItemsSource="{Binding Schedules}">
+            <ListView ItemsSource="{Binding Schedules}" BorderThickness="0">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Grid Margin="0 5" Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type Controls:MetroWindow}}}">
@@ -108,7 +108,7 @@
                                     <icons:PackIconBoxIcons ToolTip="Playing Now" Kind="SolidVolumeFull" Width="15" Height="15" HorizontalAlignment="Center" 
                                                             Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisibleOrCollapsed}}"
                                                             Foreground="OrangeRed" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding Audio.Name}" Height="25" FontSize="17" Margin="5 0 0 0" FontWeight="SemiBold" ToolTip="{Binding Audio.Name}" TextTrimming="CharacterEllipsis"  VerticalAlignment="Bottom" />
+                                    <TextBlock Text="{Binding Audio.Name}" Height="25" HorizontalAlignment="Left" FontSize="17" Margin="5 0 0 0" FontWeight="SemiBold" ToolTip="{Binding Audio.Name}" TextTrimming="CharacterEllipsis"  VerticalAlignment="Bottom" />
                                 </DockPanel>
                                 <TextBlock Text="{Binding Audio.FilePath}" Height="15" FontSize="12" FontWeight="Light" ToolTip="{Binding Audio.FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
                                 <Label Foreground="Green" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top">

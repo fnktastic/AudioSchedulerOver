@@ -196,7 +196,6 @@ namespace AudioSchedulerOver.ViewModel
         {
             return (ListCollectionView)CollectionViewSource.GetDefaultView(audios);
         }
-
         #endregion
 
         public MainViewModel(IAudioRepository audioRepository, IScheduleRepository scheduleRepository, IMachineRepository machineRepository, ISettingRepository settingRepository)
@@ -237,14 +236,10 @@ namespace AudioSchedulerOver.ViewModel
             await _settingRepository.Init();
 
             var audios = await _audioRepository.GetAllAsync();
+            var schedules = (await _scheduleRepository.GetAllAsync()).Select(x => x.ConvertToScheduleViewModel());
 
             Audios = new ObservableCollection<Audio>(audios);
-            Schedules = new ObservableCollection<ScheduleViewModel>
-                (
-                    (await _scheduleRepository
-                        .GetAllAsync())
-                        .Select(x => x.ConvertToScheduleViewModel())
-                );
+            Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
 
             TargetVolunme = int.Parse(await GetSetting("tagetVolume"));
             AppName = await GetSetting("appName");
@@ -273,7 +268,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             if (onStartup)
             {
-                Task.Run(async () =>
+                var task1 = Task.Run(async () =>
                 {
                     while (true)
                     {
@@ -282,27 +277,26 @@ namespace AudioSchedulerOver.ViewModel
                         await Task.Delay(TimeSpan.FromSeconds(AUTOCHECK_INTERVAL));
                     }
                 });
-            }
 
-            if (onStartup)
-            {
-                Task.Run(async () =>
+                var task2 = Task.Run(async () =>
                 {
-                    while (true)
-                    {
-                        await UpdateConfigs();
+                        while (true)
+                        {
+                            await SaveData();
 
-                        await SaveData();
+                            await UpdateConfigs();
 
-                        DisableSchedules();
+                            DisableSchedules();
 
-                        await Init();
+                            await Init();
 
-                        EnableSchedules();
+                            EnableSchedules();
 
-                        await Task.Delay(TimeSpan.FromMinutes(autoReloadInterval));
-                    }
+                            await Task.Delay(TimeSpan.FromMinutes(autoReloadInterval));
+                        }
                 });
+
+                Task.WhenAll(task1, task2);
             }
         }
 
@@ -645,7 +639,7 @@ namespace AudioSchedulerOver.ViewModel
                     SuccessMessage = string.Empty;
                     IsConnectSuccess = false;
 
-                    DisableSchedules();
+                    //DisableSchedules();
 
                     isAutoRunFired = false;
 
@@ -665,7 +659,7 @@ namespace AudioSchedulerOver.ViewModel
 
                     if (isAutoRunFired == false)
                     {
-                        EnableSchedules();
+                        //EnableSchedules();
 
                         isAutoRunFired = true;
                     }

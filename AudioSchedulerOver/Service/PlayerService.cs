@@ -15,7 +15,9 @@ namespace AudioSchedulerOver.Service
 
         public static ApplicationVolumeProvider ApplicationVolumeProvider;
 
-        public static ScheduleViewModel ScheduleViewModel { get; set; }
+        private static ScheduleViewModel ScheduleViewModel { get; set; }
+
+        public ScheduleViewModel GetPlayingSchedule => ScheduleViewModel;
 
         public PlayerService(MediaPlayer mediaPlayer)
         {
@@ -24,6 +26,8 @@ namespace AudioSchedulerOver.Service
             _mediaPlayer.Volume = 50;
 
             _mediaPlayer.MediaEnded += _mediaPlayer_MediaEnded;
+
+            _mediaPlayer.Changed += _mediaPlayer_Changed;
         }
 
         private void Close()
@@ -118,6 +122,11 @@ namespace AudioSchedulerOver.Service
             {
                 Logger.Log.Error(string.Format("Application exception {0} {1} {2}", ex.Message, ex.StackTrace, ex.Data));
             }
+        }
+
+        private void _mediaPlayer_Changed(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -22,11 +22,17 @@ namespace AudioSchedulerOver.Repository
 
     public class SettingRepository : ISettingRepository
     {
-        private readonly Context _context;
+        private Context _context
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<Context>();
+            }
+        }
 
         public SettingRepository(Context context)
         {
-            _context = context;
+            //_context = context;
         }
 
         public async Task<Setting> Get(string key)

@@ -21,11 +21,17 @@ namespace AudioSchedulerOver.Repository
     }
     class ScheduleRepository : IScheduleRepository
     {
-        private readonly Context _context;
+        private Context _context
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<Context>();
+            }
+        }
 
         public ScheduleRepository(Context context)
         {
-            _context = context;
+            //_context = context;
         }
 
         private async Task AddAsync(Schedule schedule)
@@ -91,6 +97,8 @@ namespace AudioSchedulerOver.Repository
                     dbEntry.IntervalEnum = schedule.IntervalEnum;
                     dbEntry.StartDate = schedule.StartDate;
                     dbEntry.DayEnum = schedule.DayEnum;
+                    dbEntry.IsActive = schedule.IsActive;
+                    dbEntry.Repeatedly = schedule.Repeatedly;
 
                     await _context.SaveChangesAsync();
                 }

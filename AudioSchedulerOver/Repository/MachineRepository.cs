@@ -1,5 +1,6 @@
 ﻿using AudioSchedulerOver.DataAccess;
 using AudioSchedulerOver.Exceptions;
+using AudioSchedulerOver.Logging;
 using AudioSchedulerOver.Model;
 using CommonServiceLocator;
 using System;
@@ -17,40 +18,54 @@ namespace AudioSchedulerOver.Repository
 
     public class MachineRepository : IMachineRepository
     {
-        private readonly Context _context;
+        private Context _context
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<Context>();
+            }
+        }
         public MachineRepository(Context context)
         {
-            _context = context;
+            //_context = context;
         }
 
         public async Task<Machine> SignIn(string machineId)
         {
-            var machine = await _context.Machines.FindAsync(machineId);
-
-            if (machine != null)
+            try
             {
-                if (machine.IsActive == false) throw new StationInactiveException();
+                var machine = await _context.Machines.FindAsync(machineId);
 
-                machine.LatestLoginAt = DateTime.UtcNow;
+                if (machine != null)
+                {
+                    if (machine.IsActive == false) throw new StationInactiveException();
+
+                    machine.LatestLoginAt = DateTime.UtcNow;
+
+                    await _context.SaveChangesAsync();
+
+                    return machine;
+                }
+
+                var newMachine = new Machine()
+                {
+                    Id = machineId,
+                    IsActive = true,
+                    IsOnline = true,
+                    LatestLoginAt = DateTime.UtcNow
+                };
+
+                _context.Machines.Add(newMachine);
 
                 await _context.SaveChangesAsync();
 
-                return machine;
+                return newMachine;
             }
-
-            var newMachine = new Machine()
+            catch (Exception e)
             {
-                Id = machineId,
-                IsActive = true,
-                IsOnline = true,
-                LatestLoginAt = DateTime.UtcNow
-            };
-
-            _context.Machines.Add(newMachine);
-
-            await _context.SaveChangesAsync();
-
-            return newMachine;
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", e.Message, e.StackTrace, e.Data));
+                return null;
+            }
         }
     }
 }
