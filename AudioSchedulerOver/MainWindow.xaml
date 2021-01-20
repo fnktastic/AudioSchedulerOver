@@ -105,10 +105,10 @@
                             </Grid.RowDefinitions>
                             <StackPanel Grid.Column="0" Grid.Row="0">
                                 <DockPanel>
-                                    <icons:PackIconBoxIcons ToolTip="Playing Now" Kind="SolidVolumeFull" Width="15" Height="15" HorizontalAlignment="Center" 
+                                    <icons:PackIconBoxIcons ToolTip="Playing Now" Kind="SolidVolumeFull" Width="15" Height="15" HorizontalAlignment="Center" Margin="0 0 5 0"
                                                             Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisibleOrCollapsed}}"
                                                             Foreground="Cyan" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding Audio.Name}" Height="25" HorizontalAlignment="Left" FontSize="17" Margin="5 0 0 0" FontWeight="SemiBold" ToolTip="{Binding Audio.Name}" TextTrimming="CharacterEllipsis"  VerticalAlignment="Bottom" />
+                                    <TextBlock Text="{Binding Audio.Name}" Height="25" HorizontalAlignment="Left" FontSize="17" Margin="0 0 0 0" FontWeight="SemiBold" ToolTip="{Binding Audio.Name}" TextTrimming="CharacterEllipsis"  VerticalAlignment="Bottom" />
                                 </DockPanel>
                                 <TextBlock Text="{Binding Audio.FilePath}" Height="15" FontSize="12" FontWeight="Light" ToolTip="{Binding Audio.FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
                                 <Label Foreground="DarkCyan" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top">

@@ -280,20 +280,23 @@ namespace AudioSchedulerOver.ViewModel
 
                 var task2 = Task.Run(async () =>
                 {
-                        while (true)
+                    while (true)
+                    {
+                        await SaveData();
+
+                        await UpdateConfigs();
+
+                        DisableSchedules();
+
+                        await Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(async () =>
                         {
-                            await SaveData();
-
-                            await UpdateConfigs();
-
-                            DisableSchedules();
-
                             await Init();
+                        }));
+                        
+                        EnableSchedules();
 
-                            EnableSchedules();
-
-                            await Task.Delay(TimeSpan.FromMinutes(autoReloadInterval));
-                        }
+                        await Task.Delay(TimeSpan.FromMinutes(autoReloadInterval));
+                    }
                 });
 
                 Task.WhenAll(task1, task2);
@@ -639,7 +642,7 @@ namespace AudioSchedulerOver.ViewModel
                     SuccessMessage = string.Empty;
                     IsConnectSuccess = false;
 
-                    //DisableSchedules();
+                    DisableSchedules();
 
                     isAutoRunFired = false;
 
@@ -659,7 +662,7 @@ namespace AudioSchedulerOver.ViewModel
 
                     if (isAutoRunFired == false)
                     {
-                        //EnableSchedules();
+                        EnableSchedules();
 
                         isAutoRunFired = true;
                     }
