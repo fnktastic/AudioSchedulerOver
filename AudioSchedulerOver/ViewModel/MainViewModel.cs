@@ -38,7 +38,7 @@ namespace AudioSchedulerOver.ViewModel
 
         private const int AUTOCHECK_INTERVAL = 3;
 
-        private readonly double autoReloadInterval = 15;
+        private readonly double autoReloadInterval = 60;
 
         private const string STARTUP_CONFIGS = "startupConfigs.txt";
 
@@ -49,8 +49,6 @@ namespace AudioSchedulerOver.ViewModel
         private bool loggedIn = false;
 
         public static int Fading_Speed = 0;
-
-        private readonly string databasePath;
 
         private readonly object _locker = new object();
 
@@ -203,16 +201,8 @@ namespace AudioSchedulerOver.ViewModel
             if (File.Exists(STARTUP_CONFIGS))
             {
                 var confs = File.ReadAllLines(STARTUP_CONFIGS);
-                databasePath = confs[0];
 
-                if (Path.IsPathRooted(databasePath) == false)
-                {
-                    string userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-
-                    databasePath = Path.Combine(userFolder, databasePath);
-                }
-
-                autoReloadInterval = double.Parse(confs[1], System.Globalization.NumberStyles.Any);
+                autoReloadInterval = double.Parse(confs[0], System.Globalization.NumberStyles.Any);
             }
 
             _audioRepository = audioRepository;
@@ -235,8 +225,8 @@ namespace AudioSchedulerOver.ViewModel
 
             await _settingRepository.Init();
 
-            var audios = await _audioRepository.GetAllAsync();
-            var schedules = (await _scheduleRepository.GetAllAsync()).Select(x => x.ConvertToScheduleViewModel());
+            var audios = await Task.Run(async () => await _audioRepository.GetAllAsync());
+            var schedules = await Task.Run(async () => (await _scheduleRepository.GetAllAsync()).Select(x => x.ConvertToScheduleViewModel()));
 
             Audios = new ObservableCollection<Audio>(audios);
             Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
@@ -286,14 +276,14 @@ namespace AudioSchedulerOver.ViewModel
 
                         await UpdateConfigs();
 
-                        DisableSchedules();
-
                         await Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(async () =>
                         {
-                            await Init();
+                            await Init().ContinueWith(i => 
+                            { 
+                                DisableSchedules(); 
+                                EnableSchedules(); 
+                            });
                         }));
-                        
-                        EnableSchedules();
 
                         await Task.Delay(TimeSpan.FromMinutes(autoReloadInterval));
                     }
@@ -484,9 +474,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                Guid scheduleId = scheduleViewModel.ScheduleId;
-
-                _audioPlaybackScheduler.KillSchedule(scheduleId);
+                _audioPlaybackScheduler.KillSchedule(scheduleViewModel.ScheduleId);
 
                 scheduleViewModel.IsActive = false;
             }
@@ -642,7 +630,7 @@ namespace AudioSchedulerOver.ViewModel
                     SuccessMessage = string.Empty;
                     IsConnectSuccess = false;
 
-                    DisableSchedules();
+                    //DisableSchedules();
 
                     isAutoRunFired = false;
 
@@ -662,7 +650,7 @@ namespace AudioSchedulerOver.ViewModel
 
                     if (isAutoRunFired == false)
                     {
-                        EnableSchedules();
+                        //EnableSchedules();
 
                         isAutoRunFired = true;
                     }
@@ -682,7 +670,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             foreach (var schedule in _schedules)
             {
-                if (_schedules.Any(y => y.ScheduleId == schedule.ScheduleId && y.IsActive))
+                if (schedule.IsActive)
                 {
                     StartScheduledPlayback(schedule);
                 }
@@ -693,7 +681,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             foreach (var scheduleViewModel in _schedules.Where(x => x.IsActive == true))
             {
-                StopScheduledPlayback(scheduleViewModel);
+                _audioPlaybackScheduler.KillSchedule(scheduleViewModel.ScheduleId);
             }
         }
 

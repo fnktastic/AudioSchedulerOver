@@ -171,7 +171,7 @@
                                 </WrapPanel>
                             </StackPanel>
                             <Button Grid.Column="2" Grid.Row="0" Content="Start" Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVisibilityConverter}}" CommandParameter="{Binding}" Command="{Binding DataContext.StartScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
-                            <Button Grid.Column="2" Grid.Row="0" Content="Stop" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibleOrCollapsed}}" CommandParameter="{Binding}" Command="{Binding DataContext.StopScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
+                            <Button Grid.Column="2" Grid.Row="0" Content="Stop" Background="Black" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibleOrCollapsed}}" CommandParameter="{Binding}" Command="{Binding DataContext.StopScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
                             <Grid.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="Save" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.SaveScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
