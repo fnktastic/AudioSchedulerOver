@@ -108,6 +108,17 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
+        private bool _isPlaying;
+        public bool IsPlaying
+        {
+            get { return _isPlaying; }
+            set
+            {
+                _isPlaying = value;
+                RaisePropertyChanged(nameof(IsPlaying));
+            }
+        }
+
         private bool _repeatedly;
         public bool Repeatedly
         {

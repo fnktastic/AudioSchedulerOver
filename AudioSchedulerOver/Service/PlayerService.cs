@@ -15,6 +15,8 @@ namespace AudioSchedulerOver.Service
 
         public static ApplicationVolumeProvider ApplicationVolumeProvider;
 
+        public static ScheduleViewModel ScheduleViewModel { get; set; }
+
         public PlayerService(MediaPlayer mediaPlayer)
         {
             _mediaPlayer = mediaPlayer;
@@ -29,10 +31,27 @@ namespace AudioSchedulerOver.Service
             _mediaPlayer.Close();
         }
 
-        public void OpenAndPlay(string path)
+        public void EnablePlaying(ScheduleViewModel scheduleViewModel = null)
+        {
+            if (ScheduleViewModel != null)
+            {
+                ScheduleViewModel.IsPlaying = false;
+            }
+
+            if (scheduleViewModel != null)
+            {
+                ScheduleViewModel = scheduleViewModel;
+
+                scheduleViewModel.IsPlaying = true;
+            }
+        }
+
+        public void OpenAndPlay(string path, ScheduleViewModel scheduleViewModel = null)
         {
             try
             {
+                EnablePlaying(scheduleViewModel);
+
                 Close();
 
                 var uri = new Uri(path);
@@ -47,10 +66,12 @@ namespace AudioSchedulerOver.Service
             }
         }
 
-        public void OpenAndPlay(Audio audio)
+        public void OpenAndPlay(Audio audio, ScheduleViewModel scheduleViewModel = null)
         {
             try
             {
+                EnablePlaying(scheduleViewModel);
+
                 Close();
 
                 var uri = new Uri(audio.FilePath);
@@ -65,7 +86,7 @@ namespace AudioSchedulerOver.Service
             }
         }
 
-        public void Play()
+        private void Play()
         {
             try
             {
@@ -80,6 +101,8 @@ namespace AudioSchedulerOver.Service
         public void Pause()
         {
             _mediaPlayer.Pause();
+
+            EnablePlaying(null);
         }
 
         private void _mediaPlayer_MediaEnded(object sender, EventArgs e)
@@ -88,6 +111,8 @@ namespace AudioSchedulerOver.Service
             {
                 if (ApplicationVolumeProvider != null)
                     ApplicationVolumeProvider.SetApplicationVolume(100, MainViewModel.Fading_Speed);
+
+                EnablePlaying(null);
             }
             catch (Exception ex)
             {

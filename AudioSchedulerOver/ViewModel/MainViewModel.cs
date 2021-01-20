@@ -1,5 +1,4 @@
-﻿using AudioSchedulerOver.DataAccess;
-using AudioSchedulerOver.Enum;
+﻿using AudioSchedulerOver.Enum;
 using AudioSchedulerOver.Exceptions;
 using AudioSchedulerOver.Helper;
 using AudioSchedulerOver.Logging;
@@ -8,17 +7,14 @@ using AudioSchedulerOver.Repository;
 using AudioSchedulerOver.Scheduler;
 using AudioSchedulerOver.Service;
 using AudioSession;
-using CommonServiceLocator;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
@@ -53,10 +49,6 @@ namespace AudioSchedulerOver.ViewModel
         private bool loggedIn = false;
 
         public static int Fading_Speed = 0;
-
-        private readonly DispatcherTimer connectionTimer = new DispatcherTimer();
-
-        private readonly DispatcherTimer configTimer = new DispatcherTimer();
 
         private readonly string databasePath;
 
@@ -245,7 +237,7 @@ namespace AudioSchedulerOver.ViewModel
             await _settingRepository.Init();
 
             var audios = await _audioRepository.GetAllAsync();
-            
+
             Audios = new ObservableCollection<Audio>(audios);
             Schedules = new ObservableCollection<ScheduleViewModel>
                 (
@@ -269,7 +261,7 @@ namespace AudioSchedulerOver.ViewModel
                     loggedIn = true;
                 }
             }
-            catch(StationInactiveException)
+            catch (StationInactiveException)
             {
                 Application.Current.Shutdown(-1);
             }
@@ -281,35 +273,36 @@ namespace AudioSchedulerOver.ViewModel
         {
             if (onStartup)
             {
-                connectionTimer.Interval = TimeSpan.FromSeconds(AUTOCHECK_INTERVAL);
-                connectionTimer.Tick += new EventHandler((object s, EventArgs a) =>
+                Task.Run(async () =>
                 {
-                    EstablishConnection();
+                    while (true)
+                    {
+                        EstablishConnection();
+
+                        await Task.Delay(TimeSpan.FromSeconds(AUTOCHECK_INTERVAL));
+                    }
                 });
-                connectionTimer.Start();
             }
 
             if (onStartup)
             {
-                configTimer.Interval = TimeSpan.FromMinutes(autoReloadInterval);
-                configTimer.Tick += new EventHandler(async (object s, EventArgs a) =>
+                Task.Run(async () =>
                 {
+                    while (true)
                     {
-                        await UpdateConfigs().ContinueWith(async i =>
-                        {
-                            await SaveData().ContinueWith(async t =>
-                            {
-                                DisableSchedules();
+                        await UpdateConfigs();
 
-                                await Init().ContinueWith(j =>
-                                {
-                                    EnableSchedules();
-                                });
-                            });
-                        });
+                        await SaveData();
+
+                        DisableSchedules();
+
+                        await Init();
+
+                        EnableSchedules();
+
+                        await Task.Delay(TimeSpan.FromMinutes(autoReloadInterval));
                     }
                 });
-                configTimer.Start();
             }
         }
 
@@ -465,7 +458,10 @@ namespace AudioSchedulerOver.ViewModel
                             var t = Task.Factory.StartNew(() =>
                             {
                                 _applicationVolumeProvider.SetApplicationVolume(_targetVolume, _fadingSpeed);
-                                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => _playerService.OpenAndPlay(audio)));
+                                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+                                {
+                                    _playerService.OpenAndPlay(audio, scheduleViewModel);
+                                }));
                             });
 
                             Task.WhenAny(t).ConfigureAwait(false);
@@ -567,7 +563,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                UpdateConfigs().Wait();
+                await UpdateConfigs();
 
                 await SaveData();
 
@@ -580,7 +576,7 @@ namespace AudioSchedulerOver.ViewModel
 
                 Logger.Log.Error(e);
 
-                UpdateConfigs().Wait();
+                await UpdateConfigs();
 
                 await SaveData();
 
@@ -626,7 +622,7 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private async Task <string> GetSetting(string key)
+        private async Task<string> GetSetting(string key)
         {
             try
             {

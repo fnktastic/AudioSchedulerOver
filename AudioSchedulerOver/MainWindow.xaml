@@ -10,6 +10,7 @@
         xmlns:viewModel="clr-namespace:AudioSchedulerOver.ViewModel"
         xmlns:enum="clr-namespace:AudioSchedulerOver.Enum"
         xmlns:system="clr-namespace:System;assembly=mscorlib"   
+        xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:model="clr-namespace:AudioSchedulerOver.Model"
         xmlns:converter="clr-namespace:AudioSchedulerOver.Converters"          
         mc:Ignorable="d"
@@ -71,7 +72,7 @@
                                 <RowDefinition Height="50" />
                             </Grid.RowDefinitions>
                             <StackPanel Grid.Column="0" Grid.Row="0">
-                                <TextBlock Text="{Binding Name}" Height="25" FontSize="18" FontWeight="SemiBold" ToolTip="{Binding Name}" TextTrimming="WordEllipsis" VerticalAlignment="Top" />
+                                <TextBlock Text="{Binding Name}" Height="25" FontSize="17" FontWeight="SemiBold" ToolTip="{Binding Name}" TextTrimming="WordEllipsis" VerticalAlignment="Top" />
                                 <TextBlock Text="{Binding FilePath}" Height="25" FontSize="12" FontWeight="Light" ToolTip="{Binding FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
                             </StackPanel>
                             <Button Grid.Column="1" Grid.Row="0" Content="Play" CommandParameter="{Binding}" Command="{Binding DataContext.PeviewAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
@@ -103,7 +104,12 @@
                                 <RowDefinition Height="60" />
                             </Grid.RowDefinitions>
                             <StackPanel Grid.Column="0" Grid.Row="0">
-                                <TextBlock Text="{Binding Audio.Name}" Height="25" FontSize="18" FontWeight="SemiBold" ToolTip="{Binding Audio.Name}" TextTrimming="WordEllipsis" VerticalAlignment="Top" />
+                                <DockPanel>
+                                    <icons:PackIconBoxIcons ToolTip="Playing Now" Kind="SolidVolumeFull" Width="15" Height="15" HorizontalAlignment="Center" 
+                                                            Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                                                            Foreground="OrangeRed" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Audio.Name}" Height="25" FontSize="17" Margin="5 0 0 0" FontWeight="SemiBold" ToolTip="{Binding Audio.Name}" TextTrimming="CharacterEllipsis"  VerticalAlignment="Bottom" />
+                                </DockPanel>
                                 <TextBlock Text="{Binding Audio.FilePath}" Height="15" FontSize="12" FontWeight="Light" ToolTip="{Binding Audio.FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
                                 <Label Foreground="Green" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top">
                                     <Label.Style>
