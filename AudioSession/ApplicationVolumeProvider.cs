@@ -24,39 +24,44 @@ namespace AudioSession
             catch { }
         }
 
-        public void SetApplicationVolume(float level, int fadingSpeed = 0)
+        public async Task SetApplicationVolume(float level, int fadingSpeed = 0)
         {
-            try
+            var task = Task.Run(() =>
             {
-                float currentVolume = GetApplicationVolume().Value;
-
-                if (currentVolume < level)
+                try
                 {
-                    for (float i = 0; i < level; i++)
-                    {
-                        if (fadingSpeed > 0)
-                            Thread.Sleep(fadingSpeed);
+                    float currentVolume = GetApplicationVolume().Value;
 
-                        SetApplicationVolume(_processId, i);
+                    if (currentVolume < level)
+                    {
+                        for (float i = 0; i < level; i++)
+                        {
+                            if (fadingSpeed > 0)
+                                Thread.Sleep(fadingSpeed);
+
+                            SetApplicationVolume(_processId, i);
+                        }
+
+                        return;
                     }
 
-                    return;
-                }
-
-                if (currentVolume > level)
-                {
-                    for (float i = currentVolume; i > level; i--)
+                    if (currentVolume > level)
                     {
-                        if (fadingSpeed > 0)
-                            Thread.Sleep(fadingSpeed);
+                        for (float i = currentVolume; i > level; i--)
+                        {
+                            if (fadingSpeed > 0)
+                                Thread.Sleep(fadingSpeed);
 
-                        SetApplicationVolume(_processId, i);
+                            SetApplicationVolume(_processId, i);
+                        }
+
+                        return;
                     }
-
-                    return;
                 }
-            }
-            catch { }
+                catch { }
+            });
+
+            await Task.WhenAll(task);
         }
 
         public float? GetApplicationVolume()

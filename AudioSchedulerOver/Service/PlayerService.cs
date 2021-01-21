@@ -5,6 +5,7 @@ using AudioSession;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media;
 
 namespace AudioSchedulerOver.Service
@@ -114,7 +115,7 @@ namespace AudioSchedulerOver.Service
             try
             {
                 if (ApplicationVolumeProvider != null)
-                    ApplicationVolumeProvider.SetApplicationVolume(100, MainViewModel.Fading_Speed);
+                    Task.WhenAll(ApplicationVolumeProvider.SetApplicationVolume(100, MainViewModel.Fading_Speed)).ConfigureAwait(false);
 
                 EnablePlaying(null);
             }

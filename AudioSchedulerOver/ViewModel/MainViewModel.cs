@@ -225,8 +225,8 @@ namespace AudioSchedulerOver.ViewModel
 
             await _settingRepository.Init();
 
-            var audios = await Task.Run(async () => await _audioRepository.GetAllAsync());
-            var schedules = await Task.Run(async () => (await _scheduleRepository.GetAllAsync()).Select(x => x.ConvertToScheduleViewModel()));
+            var audios = await _audioRepository.GetAllAsync();
+            var schedules = (await _scheduleRepository.GetAllAsync()).Select(x => x.ConvertToScheduleViewModel());
 
             Audios = new ObservableCollection<Audio>(audios);
             Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
@@ -442,13 +442,13 @@ namespace AudioSchedulerOver.ViewModel
                     {
                         try
                         {
-                            var t = Task.Factory.StartNew(() =>
+                            var t = Task.Factory.StartNew(async () =>
                             {
-                                _applicationVolumeProvider.SetApplicationVolume(_targetVolume, _fadingSpeed);
-                                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
-                                {
-                                    _playerService.OpenAndPlay(audio, scheduleViewModel);
-                                }));
+                                await _applicationVolumeProvider.SetApplicationVolume(_targetVolume, _fadingSpeed);
+                                await Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+                                 {
+                                     _playerService.OpenAndPlay(audio, scheduleViewModel);
+                                 }));
                             });
 
                             Task.WhenAny(t).ConfigureAwait(false);
