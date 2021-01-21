@@ -130,6 +130,17 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
+        private TimeSpan _nextFire;
+        public TimeSpan NextFire
+        {
+            get { return _nextFire; }
+            set
+            {
+                _nextFire = value;
+                RaisePropertyChanged(nameof(NextFire));
+            }
+        }
+
         public Schedule ConvertToSchedule()
         {
             return new Schedule()

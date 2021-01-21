@@ -204,6 +204,7 @@
     <Compile Include="Converters\BoolToVisibleOrCollapsed.cs" />
     <Compile Include="Converters\InverseBoolConverter.cs" />
     <Compile Include="Converters\InverseBoolToVisibilityConverter.cs" />
+    <Compile Include="Converters\TimeSpanConverter.cs" />
     <Compile Include="DataAccess\DataContext.cs" />
     <Compile Include="Enum\IntervalEnum.cs" />
     <Compile Include="Exceptions\StationInactiveException.cs" />

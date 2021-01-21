@@ -2,18 +2,35 @@
 using AudioSchedulerOver.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 
 namespace AudioSchedulerOver.Service
 {
+    public class TimeToGo
+    {
+        public Timer Timer { get; set; }
+        public TimeSpan TimeSpan { get; set; }
+        public double IntervalInHour { get; set; }
+
+        public TimeToGo(Timer timer, TimeSpan timeSpan, double intervalInhour)
+        {
+            Timer = timer;
+            TimeSpan = timeSpan;
+            IntervalInHour = intervalInhour;
+        }
+    }
+
     public class SchedulerService
     {
         private static SchedulerService _instance;
-        private readonly Dictionary<Guid, Timer> _timers = new Dictionary<Guid, Timer>();
+        private readonly Dictionary<Guid, TimeToGo> _timers = new Dictionary<Guid, TimeToGo>();
 
         private SchedulerService() { }
 
         public static SchedulerService Instance => _instance ?? (_instance = new SchedulerService());
+
+        public Dictionary<Guid, TimeToGo> GetTimers() => _timers;
 
         static DateTime GetNextWeekday(System.DayOfWeek day, int extraDay = 1)
         {
@@ -28,7 +45,7 @@ namespace AudioSchedulerOver.Service
             try
             {
                 Timer timer;
-                TimeSpan timeToGo;
+                TimeSpan runIn;
                 TimeSpan period;
 
                 var targetDate = GetNextWeekday((System.DayOfWeek)dayEnum);
@@ -45,16 +62,18 @@ namespace AudioSchedulerOver.Service
                         targetDate = targetDate.AddDays(7);
                 }
 
-                timeToGo = targetDate - DateTime.Now;
+                runIn = targetDate - DateTime.Now;
 
                 period = targetDate - targetDate.AddDays(-7);
 
                 timer = new Timer(x =>
                 {
                     task.Invoke();
-                }, null, timeToGo.Ticks / 10_000, period.Ticks / 10_000);
+                }, null, runIn.Ticks / 10_000, period.Ticks / 10_000);
 
-                AddTimerSafe(scheduleId, timer);
+                var timeToGo = new TimeToGo(timer, runIn, intervalInHour);
+
+                AddTimerSafe(scheduleId, timeToGo);
             }
             catch (Exception e)
             {
@@ -82,14 +101,16 @@ namespace AudioSchedulerOver.Service
                     }
                 }
 
-                var timeToGo = targetDate - DateTime.Now;
+                var runIn = targetDate - DateTime.Now;
 
                 var timer = new Timer(x =>
                 {
                     task.Invoke();
-                }, null, timeToGo, TimeSpan.FromHours(intervalInHour));
+                }, null, runIn, TimeSpan.FromHours(intervalInHour));
 
-                AddTimerSafe(scheduleId, timer);
+                var timeToGo = new TimeToGo(timer, runIn, intervalInHour);
+
+                AddTimerSafe(scheduleId, timeToGo);
             }
             catch (Exception e)
             {
@@ -97,14 +118,14 @@ namespace AudioSchedulerOver.Service
             }
         }
 
-        private void AddTimerSafe(Guid scheduleId, Timer timer)
+        private void AddTimerSafe(Guid scheduleId, TimeToGo timeToGo)
         {
             if (_timers.ContainsKey(scheduleId))
             {
                 KillSchedule(scheduleId);
             }
 
-            _timers.Add(scheduleId, timer);
+            _timers.Add(scheduleId, timeToGo);
         }
 
         public void ScheduleTask(double intervalInHour, Action task, Guid scheduleId, DayOfWeek dayEnum, bool repeatedly, TimeSpan? startAt = null)
@@ -126,13 +147,13 @@ namespace AudioSchedulerOver.Service
             {
                 if (_timers.ContainsKey(scheduleId))
                 {
-                    var timer = _timers[scheduleId];
+                    var timeToGo = _timers[scheduleId];
 
                     _timers.Remove(scheduleId);
 
-                    timer.Change(Timeout.Infinite, Timeout.Infinite);
+                    timeToGo.Timer.Change(Timeout.Infinite, Timeout.Infinite);
 
-                    timer.Dispose();
+                    timeToGo.Timer.Dispose();
                 }
             }
             catch (Exception e)

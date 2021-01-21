@@ -36,6 +36,7 @@
         <converter:BoolToVisibleOrCollapsed x:Key="BoolToVisibleOrCollapsed" />
         <converter:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
         <converter:InverseBoolConverter x:Key="InverseBoolConverter" />
+        <converter:TimeSpanConverter x:Key="TimeSpanConverter" />
     </Controls:MetroWindow.Resources>
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
@@ -111,20 +112,25 @@
                                     <TextBlock Text="{Binding Audio.Name}" Height="25" HorizontalAlignment="Left" FontSize="17" Margin="0 0 0 0" FontWeight="SemiBold" ToolTip="{Binding Audio.Name}" TextTrimming="CharacterEllipsis"  VerticalAlignment="Bottom" />
                                 </DockPanel>
                                 <TextBlock Text="{Binding Audio.FilePath}" Height="15" FontSize="12" FontWeight="Light" ToolTip="{Binding Audio.FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
-                                <Label Foreground="DarkCyan" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top">
-                                    <Label.Style>
-                                        <Style TargetType="{x:Type Label}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Value="True">
-                                                    <Setter Property="Content" Value="active"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Value="False">
-                                                    <Setter Property="Content" Value="stopped"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Label.Style>
-                                </Label>
+                                <DockPanel>
+                                    <TextBlock 
+                                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                                        Text="{Binding NextFire, Converter={StaticResource TimeSpanConverter}}" />
+                                    <Label Foreground="DarkCyan" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Center" VerticalContentAlignment="Center">
+                                        <Label.Style>
+                                            <Style TargetType="{x:Type Label}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Value="True">
+                                                        <Setter Property="Content" Value="active"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Value="False">
+                                                        <Setter Property="Content" Value="stopped"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Label.Style>
+                                    </Label>
+                                </DockPanel>
                             </StackPanel>
                             <StackPanel Margin="10 0 0 0" Grid.Column="1" Grid.Row="0">
                                 <WrapPanel Height="30" Orientation="Horizontal" VerticalAlignment="Top">

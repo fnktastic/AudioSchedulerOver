@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -33,6 +34,7 @@ namespace AudioSchedulerOver.ViewModel
         private IMachineRepository _machineRepository;
 
         private ApplicationVolumeProvider _applicationVolumeProvider;
+        private readonly Timer _uiTimer;
 
         private const string APP = "Y.Music";
 
@@ -43,6 +45,8 @@ namespace AudioSchedulerOver.ViewModel
         private const string STARTUP_CONFIGS = "startupConfigs.txt";
 
         private const int DEFAULT_REPEAT_INTERVAL = 1;
+
+        private const int DEFAULT_COUNTDOWN_UPDATE_MSEC = 1000;
 
         private bool isAutoRunFired = false;
 
@@ -216,6 +220,13 @@ namespace AudioSchedulerOver.ViewModel
 
             _audioPlaybackScheduler = new AudioPlaybackScheduler();
 
+            _uiTimer = new Timer()
+            {
+                Interval = DEFAULT_COUNTDOWN_UPDATE_MSEC
+            };
+
+            _uiTimer.Elapsed += _uiTimer_Tick;
+
             Task.WhenAll(Init(true));
         }
 
@@ -254,6 +265,26 @@ namespace AudioSchedulerOver.ViewModel
             InitTimers(onStartup);
         }
 
+        private void _uiTimer_Tick(object sender, EventArgs e)
+        {
+            var timers = SchedulerService.Instance.GetTimers();
+
+            foreach(var schedule in _schedules)
+            {
+                if(timers.ContainsKey(schedule.ScheduleId))
+                {
+                    var timeToGo = timers[schedule.ScheduleId];
+
+                    var newTimeSpan = timeToGo.TimeSpan = timeToGo.TimeSpan - TimeSpan.FromMilliseconds(DEFAULT_COUNTDOWN_UPDATE_MSEC);
+
+                    if(newTimeSpan.TotalMilliseconds < 0)
+                        timeToGo.TimeSpan = TimeSpan.FromHours(timeToGo.IntervalInHour);
+
+                    schedule.NextFire = newTimeSpan;
+                }
+            }
+        }
+
         private void InitTimers(bool onStartup = false)
         {
             if (onStartup)
@@ -288,6 +319,8 @@ namespace AudioSchedulerOver.ViewModel
                         await Task.Delay(TimeSpan.FromMinutes(autoReloadInterval));
                     }
                 });
+
+                _uiTimer.Start();
 
                 Task.WhenAll(task1, task2);
             }
@@ -553,7 +586,7 @@ namespace AudioSchedulerOver.ViewModel
                 await SaveData();
 
                 if (_applicationVolumeProvider != null)
-                    _applicationVolumeProvider.SetApplicationVolume(100);
+                    await _applicationVolumeProvider.SetApplicationVolume(100);
             }
             catch (Exception e)
             {
