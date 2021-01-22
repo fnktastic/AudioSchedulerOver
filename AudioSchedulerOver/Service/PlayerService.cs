@@ -1,4 +1,5 @@
-﻿using AudioSchedulerOver.Logging;
+﻿using AudioSchedulerOver.Interface;
+using AudioSchedulerOver.Logging;
 using AudioSchedulerOver.Model;
 using AudioSchedulerOver.ViewModel;
 using AudioSession;
@@ -16,9 +17,9 @@ namespace AudioSchedulerOver.Service
 
         public static ApplicationVolumeProvider ApplicationVolumeProvider;
 
-        private static ScheduleViewModel ScheduleViewModel { get; set; }
+        private static IPlayable _playable { get; set; }
 
-        public ScheduleViewModel GetPlayingSchedule => ScheduleViewModel;
+        public IPlayable Playable => _playable;
 
         public PlayerService(MediaPlayer mediaPlayer)
         {
@@ -36,26 +37,26 @@ namespace AudioSchedulerOver.Service
             _mediaPlayer.Close();
         }
 
-        public void EnablePlaying(ScheduleViewModel scheduleViewModel = null)
+        public void EnablePlaying(IPlayable playable = null)
         {
-            if (ScheduleViewModel != null)
+            if (_playable != null)
             {
-                ScheduleViewModel.IsPlaying = false;
+                _playable.IsPlaying = false;
             }
 
-            if (scheduleViewModel != null)
+            if (playable != null)
             {
-                ScheduleViewModel = scheduleViewModel;
+                _playable = playable;
 
-                scheduleViewModel.IsPlaying = true;
+                _playable.IsPlaying = true;
             }
         }
 
-        public void OpenAndPlay(string path, ScheduleViewModel scheduleViewModel = null)
+        public void OpenAndPlay(string path, IPlayable playable = null)
         {
             try
             {
-                EnablePlaying(scheduleViewModel);
+                EnablePlaying(playable);
 
                 Close();
 
@@ -71,11 +72,11 @@ namespace AudioSchedulerOver.Service
             }
         }
 
-        public void OpenAndPlay(Audio audio, ScheduleViewModel scheduleViewModel = null)
+        public void OpenAndPlay(AudioViewModel audio, IPlayable playable = null)
         {
             try
             {
-                EnablePlaying(scheduleViewModel);
+                EnablePlaying(playable);
 
                 Close();
 

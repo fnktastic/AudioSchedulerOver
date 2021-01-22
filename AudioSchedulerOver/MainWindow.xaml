@@ -73,7 +73,12 @@
                                 <RowDefinition Height="50" />
                             </Grid.RowDefinitions>
                             <StackPanel Grid.Column="0" Grid.Row="0">
-                                <TextBlock Text="{Binding Name}" Height="25" FontSize="17" FontWeight="SemiBold" ToolTip="{Binding Name}" TextTrimming="WordEllipsis" VerticalAlignment="Top" />
+                                <DockPanel>
+                                    <icons:PackIconBoxIcons ToolTip="Playing Now" Kind="SolidVolumeFull" Width="15" Height="15" HorizontalAlignment="Center" Margin="0 0 5 0"
+                                                            Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                                                            Foreground="Cyan" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Name}" Height="25" FontSize="17" FontWeight="SemiBold" ToolTip="{Binding Name}" TextTrimming="WordEllipsis" VerticalAlignment="Top" />
+                                </DockPanel>
                                 <TextBlock Text="{Binding FilePath}" Height="25" FontSize="12" FontWeight="Light" ToolTip="{Binding FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
                             </StackPanel>
                             <Button Grid.Column="1" Grid.Row="0" Content="Play" CommandParameter="{Binding}" Command="{Binding DataContext.PeviewAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
@@ -152,20 +157,20 @@
                                                      TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
                                         </Grid>
 
-                                        <Grid  Grid.Column="1">
+                                        <Grid Grid.Column="1">
                                             <TextBlock Width="10" TextWrapping="Wrap" VerticalAlignment="Center" Background="{x:Null}" FontFamily="Goudy Stout"
                                                        FontSize="14" Text=":" TextAlignment="Center"/>
                                         </Grid>
 
-                                        <Grid  Grid.Column="2" Focusable="True">
+                                        <Grid Grid.Column="2" Focusable="True">
                                             <TextBox Width="30" x:Name="ddTxt"  TextWrapping="Wrap" Text="{Binding Minutes}" TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
                                         </Grid>
 
-                                        <Grid  Grid.Column="3">
+                                        <Grid Grid.Column="3">
                                             <TextBlock Width="10" TextWrapping="Wrap" VerticalAlignment="Center" Background="{x:Null}" FontFamily="Goudy Stout" FontSize="14" Text=":" TextAlignment="Center"/>
                                         </Grid>
 
-                                        <Grid  Grid.Column="4" Focusable="True">
+                                        <Grid Grid.Column="4" Focusable="True">
                                             <TextBox Width="30" x:Name="yyTxt"  TextWrapping="Wrap" Text="{Binding Seconds}" TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
                                         </Grid>
                                     </Grid>

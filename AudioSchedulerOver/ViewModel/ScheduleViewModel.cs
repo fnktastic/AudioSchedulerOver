@@ -1,5 +1,6 @@
 ﻿using AudioSchedulerOver.Enum;
 using AudioSchedulerOver.Helper;
+using AudioSchedulerOver.Interface;
 using AudioSchedulerOver.Model;
 using GalaSoft.MvvmLight;
 using System;
@@ -10,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace AudioSchedulerOver.ViewModel
 {
-    public class ScheduleViewModel : ViewModelBase
+    public class ScheduleViewModel : ViewModelBase, IPlayable
     {
-        public Audio Audio { get; set; }
+        public AudioViewModel Audio { get; set; }
 
         public Guid ScheduleId { get; set; }
 
@@ -145,7 +146,8 @@ namespace AudioSchedulerOver.ViewModel
         {
             return new Schedule()
             {
-                Audio = this.Audio,
+                Audio = this.Audio.ConvertToAudio(),
+                AudioId = this.Audio.Id,
                 Id = this.ScheduleId,
                 Interval = this.Interval,
                 IntervalEnum = this.IntervalEnum,

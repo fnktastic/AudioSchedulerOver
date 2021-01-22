@@ -30,7 +30,12 @@ namespace AudioSession
             {
                 try
                 {
-                    float currentVolume = GetApplicationVolume().Value;
+                    var applicationVolume = GetApplicationVolume();
+
+                    float currentVolume = 100;
+
+                    if (applicationVolume != null)
+                        currentVolume = applicationVolume.Value;
 
                     if (currentVolume < level)
                     {

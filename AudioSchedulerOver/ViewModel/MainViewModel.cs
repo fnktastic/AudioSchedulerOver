@@ -58,8 +58,8 @@ namespace AudioSchedulerOver.ViewModel
         private readonly object _locker = new object();
 
         #region properties
-        private ObservableCollection<Audio> _audios;
-        public ObservableCollection<Audio> Audios
+        private ObservableCollection<AudioViewModel> _audios;
+        public ObservableCollection<AudioViewModel> Audios
         {
             get { return _audios; }
             set
@@ -195,7 +195,7 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        public ListCollectionView GetAudiosCollectionView(IEnumerable<Audio> audios)
+        public ListCollectionView GetAudiosCollectionView(IEnumerable<AudioViewModel> audios)
         {
             return (ListCollectionView)CollectionViewSource.GetDefaultView(audios);
         }
@@ -238,10 +238,10 @@ namespace AudioSchedulerOver.ViewModel
 
             await _serialQueue.Enqueue(async () => await _settingRepository.Init());
 
-            var audios = await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync());
+            var audios = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).Select(x => x.ConvertToAudioViewModel());
             var schedules = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync())).Select(x => x.ConvertToScheduleViewModel());
 
-            Audios = new ObservableCollection<Audio>(audios);
+            Audios = new ObservableCollection<AudioViewModel>(audios);
             Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
 
             TargetVolunme = int.Parse(await GetSetting("tagetVolume"));
@@ -373,9 +373,9 @@ namespace AudioSchedulerOver.ViewModel
 
                     foreach (var file in files)
                     {
-                        var audio = Audio.CreateInstnceFromPath(file);
+                        var audio = Audio.CreateInstnceFromPath(file).ConvertToAudioViewModel();
 
-                        await _serialQueue.Enqueue(async () => await _audioRepository.AddAsync(audio));
+                        await _serialQueue.Enqueue(async () => await _audioRepository.AddAsync(audio.ConvertToAudio()));
 
                         Audios.Add(audio);
                     }
@@ -401,13 +401,13 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private RelayCommand<Audio> _peviewAudioCommand;
-        public RelayCommand<Audio> PeviewAudioCommand => _peviewAudioCommand ?? (_peviewAudioCommand = new RelayCommand<Audio>(PeviewAudio));
-        private void PeviewAudio(Audio audio)
+        private RelayCommand<AudioViewModel> _peviewAudioCommand;
+        public RelayCommand<AudioViewModel> PeviewAudioCommand => _peviewAudioCommand ?? (_peviewAudioCommand = new RelayCommand<AudioViewModel>(PeviewAudio));
+        private void PeviewAudio(AudioViewModel audio)
         {
             try
             {
-                _playerService.OpenAndPlay(audio);
+                _playerService.OpenAndPlay(audio, audio);
             }
             catch (Exception e)
             {
@@ -415,15 +415,15 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private RelayCommand<Audio> _removeAudioCommand;
-        public RelayCommand<Audio> RemoveAudioCommand => _removeAudioCommand ?? (_removeAudioCommand = new RelayCommand<Audio>(RemoveAudio));
-        private async void RemoveAudio(Audio audio)
+        private RelayCommand<AudioViewModel> _removeAudioCommand;
+        public RelayCommand<AudioViewModel> RemoveAudioCommand => _removeAudioCommand ?? (_removeAudioCommand = new RelayCommand<AudioViewModel>(RemoveAudio));
+        private async void RemoveAudio(AudioViewModel audio)
         {
             try
             {
                 _audios.Remove(audio);
 
-                await _serialQueue.Enqueue(async () => await _audioRepository.RemoveAsync(audio));
+                await _serialQueue.Enqueue(async () => await _audioRepository.RemoveAsync(audio.ConvertToAudio()));
             }
             catch (Exception e)
             {
@@ -431,9 +431,9 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private RelayCommand<Audio> _addAudioToScheduleCommand;
-        public RelayCommand<Audio> AddAudioToScheduleCommand => _addAudioToScheduleCommand ?? (_addAudioToScheduleCommand = new RelayCommand<Audio>(AddAudioToSchedule));
-        private void AddAudioToSchedule(Audio audio)
+        private RelayCommand<AudioViewModel> _addAudioToScheduleCommand;
+        public RelayCommand<AudioViewModel> AddAudioToScheduleCommand => _addAudioToScheduleCommand ?? (_addAudioToScheduleCommand = new RelayCommand<AudioViewModel>(AddAudioToSchedule));
+        private void AddAudioToSchedule(AudioViewModel audio)
         {
             try
             {
@@ -461,7 +461,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                Audio audio = scheduleViewModel.Audio;
+                AudioViewModel audio = scheduleViewModel.Audio;
                 TimeSpan start = scheduleViewModel.StartDate;
                 int interval = scheduleViewModel.Interval;
                 IntervalEnum intervalEnum = scheduleViewModel.IntervalEnum;
@@ -522,7 +522,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                PeviewAudio(scheduleViewModel.Audio);
+                _playerService.OpenAndPlay(scheduleViewModel.Audio, scheduleViewModel);
             }
             catch (Exception e)
             {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AudioSchedulerOver.ViewModel;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,6 +21,16 @@ namespace AudioSchedulerOver.Model
                 FilePath = filePath,
                 Name = Path.GetFileName(filePath),
                 Id = Guid.NewGuid()
+            };
+        }
+
+        public AudioViewModel ConvertToAudioViewModel()
+        {
+            return new AudioViewModel()
+            {
+                Id = this.Id,
+                Name = this.Name,
+                FilePath = this.FilePath
             };
         }
     }

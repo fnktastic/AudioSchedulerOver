@@ -36,7 +36,7 @@ namespace AudioSchedulerOver.Model
 
             return new ScheduleViewModel()
             {
-                Audio = this.Audio,
+                Audio = this.Audio.ConvertToAudioViewModel(),
                 Interval = this.Interval,
                 IntervalEnum = this.IntervalEnum,
                 ScheduleId = this.Id,

@@ -210,6 +210,7 @@
     <Compile Include="Exceptions\StationInactiveException.cs" />
     <Compile Include="Helper\MachineIdGenerator.cs" />
     <Compile Include="Helper\SerialQueue.cs" />
+    <Compile Include="Interface\IPlayable.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Model\Audio.cs" />
     <Compile Include="Model\Machine.cs" />
@@ -222,6 +223,7 @@
     <Compile Include="Scheduler\AudioPlaybackScheduler.cs" />
     <Compile Include="Service\PlayerService.cs" />
     <Compile Include="Service\SchedulerService.cs" />
+    <Compile Include="ViewModel\AudioViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ScheduleViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />

@@ -86,7 +86,7 @@ namespace AudioSchedulerOver.Repository
 
                 if (dbEntry != null)
                 {
-                    dbEntry.Audio = schedule.Audio;
+                    dbEntry.AudioId = schedule.AudioId;
                     dbEntry.Interval = schedule.Interval;
                     dbEntry.IntervalEnum = schedule.IntervalEnum;
                     dbEntry.StartDate = schedule.StartDate;
