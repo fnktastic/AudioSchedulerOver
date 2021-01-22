@@ -14,7 +14,7 @@ namespace AudioSchedulerOver.Converters
         {
             if(value is TimeSpan timeSpan)
             {
-                return timeSpan.ToString("hh\\:mm\\:ss");
+                return timeSpan.ToString("d'd 'h'h 'm'm 's's'");
             }
 
             return "";

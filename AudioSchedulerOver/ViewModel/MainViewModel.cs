@@ -225,7 +225,7 @@ namespace AudioSchedulerOver.ViewModel
                 Interval = DEFAULT_COUNTDOWN_UPDATE_MSEC
             };
 
-            _uiTimer.Elapsed += _uiTimer_Tick;
+            _uiTimer.Elapsed += uiTimer_Tick;
 
             Task.WhenAll(Init(true));
         }
@@ -265,22 +265,25 @@ namespace AudioSchedulerOver.ViewModel
             InitTimers(onStartup);
         }
 
-        private void _uiTimer_Tick(object sender, EventArgs e)
+        private void uiTimer_Tick(object sender, EventArgs e)
         {
             var timers = SchedulerService.Instance.GetTimers();
 
-            foreach(var schedule in _schedules)
+            foreach (var schedule in _schedules)
             {
-                if(timers.ContainsKey(schedule.ScheduleId))
+                if (timers.ContainsKey(schedule.ScheduleId))
                 {
                     var timeToGo = timers[schedule.ScheduleId];
 
-                    var newTimeSpan = timeToGo.TimeSpan = timeToGo.TimeSpan - TimeSpan.FromMilliseconds(DEFAULT_COUNTDOWN_UPDATE_MSEC);
+                    var newTimeSpan = timeToGo.TimeSpan -= TimeSpan.FromMilliseconds(DEFAULT_COUNTDOWN_UPDATE_MSEC);
 
-                    if(newTimeSpan.TotalMilliseconds < 0)
+                    if (newTimeSpan.TotalMilliseconds < 1)
+                    {
                         timeToGo.TimeSpan = TimeSpan.FromHours(timeToGo.IntervalInHour);
+                    }
 
-                    schedule.NextFire = newTimeSpan;
+                    if (newTimeSpan.TotalMilliseconds >= 0)
+                        schedule.NextFire = newTimeSpan;
                 }
             }
         }
@@ -309,10 +312,10 @@ namespace AudioSchedulerOver.ViewModel
 
                         await Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(async () =>
                         {
-                            await Init().ContinueWith(i => 
-                            { 
-                                DisableSchedules(); 
-                                EnableSchedules(); 
+                            await Init().ContinueWith(i =>
+                            {
+                                DisableSchedules();
+                                EnableSchedules();
                             });
                         }));
 
@@ -456,12 +459,6 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                if (IsConnectSuccess == false)
-                {
-                    ErrorMessage = "Error. Connect to the media player first.";
-                    return;
-                }
-
                 Audio audio = scheduleViewModel.Audio;
                 TimeSpan start = scheduleViewModel.StartDate;
                 int interval = scheduleViewModel.Interval;
@@ -577,16 +574,12 @@ namespace AudioSchedulerOver.ViewModel
 
         private RelayCommand<object> _onAppCloseCommand;
         public RelayCommand<object> OnAppCloseCommand => _onAppCloseCommand ?? (_onAppCloseCommand = new RelayCommand<object>(OnAppClose));
-        private async void OnAppClose(object o)
+        private void OnAppClose(object o)
         {
             try
             {
-                await UpdateConfigs();
-
-                await SaveData();
-
                 if (_applicationVolumeProvider != null)
-                    await _applicationVolumeProvider.SetApplicationVolume(100);
+                    _applicationVolumeProvider.SetApplicationVolume(100).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -594,12 +587,8 @@ namespace AudioSchedulerOver.ViewModel
 
                 Logger.Log.Error(e);
 
-                await UpdateConfigs();
-
-                await SaveData();
-
                 if (_applicationVolumeProvider != null)
-                    _applicationVolumeProvider.SetApplicationVolume(100);
+                   _applicationVolumeProvider.SetApplicationVolume(100).ConfigureAwait(false);
             }
             finally
             {

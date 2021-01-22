@@ -40,7 +40,7 @@
     </Controls:MetroWindow.Resources>
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="265" />
+            <ColumnDefinition Width="270" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="275" />
         </Grid.ColumnDefinitions>
@@ -97,7 +97,7 @@
                     <DataTemplate>
                         <Grid Margin="0 5" Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type Controls:MetroWindow}}}">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="250"/>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="50" />
                             </Grid.ColumnDefinitions>
@@ -113,10 +113,11 @@
                                 </DockPanel>
                                 <TextBlock Text="{Binding Audio.FilePath}" Height="15" FontSize="12" FontWeight="Light" ToolTip="{Binding Audio.FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
                                 <DockPanel>
-                                    <TextBlock 
-                                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                                    <TextBlock Foreground="DarkGray"
+                                        HorizontalAlignment="Left" VerticalAlignment="Center" 
                                         Text="{Binding NextFire, Converter={StaticResource TimeSpanConverter}}" />
-                                    <Label Foreground="DarkCyan" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Center" VerticalContentAlignment="Center">
+                                    <Label Foreground="Cyan" HorizontalAlignment="Right" HorizontalContentAlignment="Right" 
+                                           VerticalAlignment="Center" VerticalContentAlignment="Center">
                                         <Label.Style>
                                             <Style TargetType="{x:Type Label}">
                                                 <Style.Triggers>
@@ -132,7 +133,7 @@
                                     </Label>
                                 </DockPanel>
                             </StackPanel>
-                            <StackPanel Margin="10 0 0 0" Grid.Column="1" Grid.Row="0">
+                            <StackPanel Margin="0 0 10 0" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Right">
                                 <WrapPanel Height="30" Orientation="Horizontal" VerticalAlignment="Top">
                                     <TextBlock Text="Start in" VerticalAlignment="Center" />
                                     <ComboBox ItemsSource="{Binding Source={StaticResource dayEnum}}" Margin="5 0" Width="125" SelectedItem="{Binding DayEnum, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
@@ -173,7 +174,7 @@
                                     <TextBlock Visibility="{Binding Repeatedly, Converter={StaticResource BoolToVisibleOrCollapsed}}" Margin="0 0 5 0" Text="repeat every" VerticalAlignment="Center" />
                                     <TextBox Visibility="{Binding Repeatedly, Converter={StaticResource BoolToVisibleOrCollapsed}}" Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5 0" Width="30"/>
                                     <ComboBox Visibility="{Binding Repeatedly, Converter={StaticResource BoolToVisibleOrCollapsed}}" ItemsSource="{Binding Source={StaticResource intervalEnum}}" Margin="5 0" Width="103" SelectedItem="{Binding IntervalEnum, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
-                                    <CheckBox Content="Repeatedly" IsChecked="{Binding Repeatedly}" HorizontalAlignment="Right" />
+                                    <CheckBox Content="Repeated" IsChecked="{Binding Repeatedly}" HorizontalAlignment="Right" />
                                 </WrapPanel>
                             </StackPanel>
                             <Button Grid.Column="2" Grid.Row="0" Content="Start" Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVisibilityConverter}}" CommandParameter="{Binding}" Command="{Binding DataContext.StartScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
@@ -196,8 +197,8 @@
                 <TextBlock Text="Target Music Player Name" />
                 <TextBox Text="{Binding AppName, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Text="{Binding SuccessMessage}" TextAlignment="Center" TextWrapping="Wrap" Foreground="Green"  HorizontalAlignment="Center" />
-                <TextBlock Text="{Binding ErrorMessage}" TextAlignment="Center" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding SuccessMessage}" TextAlignment="Center" Margin="0 10 0 0" TextWrapping="Wrap" Foreground="Green"  HorizontalAlignment="Center" VerticalAlignment="Top" />
+                <TextBlock Text="{Binding ErrorMessage}" TextAlignment="Center" Margin="0 -10 0 0" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Center" VerticalAlignment="Top" />
 
                 <TextBlock Text="Master Volume" Margin="0 10 0 0" />
                 <WrapPanel>
