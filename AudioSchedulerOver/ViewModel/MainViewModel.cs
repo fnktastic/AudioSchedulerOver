@@ -41,7 +41,7 @@ namespace AudioSchedulerOver.ViewModel
 
         private const int AUTOCHECK_INTERVAL = 3;
 
-        private readonly double autoReloadInterval = 60;
+        private readonly double autoReloadInterval = 0.5;
 
         private const string STARTUP_CONFIGS = "startupConfigs.txt";
 

@@ -98,6 +98,7 @@ namespace AudioSchedulerOver.Repository
                 }
                 else
                 {
+                    schedule.Audio = null;
                     await AddAsync(schedule);
                 }
             }
