@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace AudioSchedulerOver.Helper
 {
-    public static class MachineId
+    public static class MachineIdGenerator
     {
-        private static string _id;
-        static MachineId()
+        private static readonly string _id;
+        static MachineIdGenerator()
         {
             _id = new DeviceIdBuilder()
                 .AddMachineName()

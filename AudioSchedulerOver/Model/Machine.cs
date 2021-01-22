@@ -9,7 +9,7 @@ namespace AudioSchedulerOver.Model
 {
     public class Machine
     {
-        public string Id { get; set; } = MachineId.Get;
+        public string Id { get; set; } = MachineIdGenerator.Get;
         public bool IsActive { get; set; }
         public bool IsOnline { get; set; }
         public DateTime LatestLoginAt { get; set; }

@@ -22,24 +22,18 @@ namespace AudioSchedulerOver.Repository
 
     public class SettingRepository : ISettingRepository
     {
-        private Context _context
-        {
-            get
-            {
-                return ServiceLocator.Current.GetInstance<Context>();
-            }
-        }
+        private readonly Context _context;
 
         public SettingRepository(Context context)
         {
-            //_context = context;
+            _context = context;
         }
 
         public async Task<Setting> Get(string key)
         {
             try
             {
-                return await _context.Settings.Where(x => x.MachineId == MachineId.Get).FirstOrDefaultAsync(x => x.Key == key);
+                return await _context.Settings.Where(x => x.MachineId == MachineIdGenerator.Get).FirstOrDefaultAsync(x => x.Key == key);
             }
             catch (Exception e)
             {
@@ -55,7 +49,7 @@ namespace AudioSchedulerOver.Repository
                 if (value == null)
                     value = string.Empty;
 
-                var dbEntry = await _context.Settings.Where(x => x.MachineId == MachineId.Get).FirstOrDefaultAsync(x => x.Key == key);
+                var dbEntry = await _context.Settings.Where(x => x.MachineId == MachineIdGenerator.Get).FirstOrDefaultAsync(x => x.Key == key);
                 if (dbEntry != null)
                 {
                     dbEntry.Value = value;
@@ -76,7 +70,7 @@ namespace AudioSchedulerOver.Repository
                 var appName = await Get("appName");
                 if (appName == null)
                 {
-                    var i = new Setting() { Id = Guid.NewGuid(), Key = "appName", Value = "<app name>", MachineId = MachineId.Get };
+                    var i = new Setting() { Id = Guid.NewGuid(), Key = "appName", Value = "<app name>", MachineId = MachineIdGenerator.Get };
                     _context.Settings.Add(i);
                     await _context.SaveChangesAsync();
                 }
@@ -84,7 +78,7 @@ namespace AudioSchedulerOver.Repository
                 var tagetVolume = await Get("tagetVolume");
                 if (tagetVolume == null)
                 {
-                    var o = new Setting() { Id = Guid.NewGuid(), Key = "tagetVolume", Value = "27", MachineId = MachineId.Get };
+                    var o = new Setting() { Id = Guid.NewGuid(), Key = "tagetVolume", Value = "27", MachineId = MachineIdGenerator.Get };
                     _context.Settings.Add(o);
                     await _context.SaveChangesAsync();
                 }
@@ -92,7 +86,7 @@ namespace AudioSchedulerOver.Repository
                 var fadingSpeed = await Get("fadingSpeed");
                 if (fadingSpeed == null)
                 {
-                    var o = new Setting() { Id = Guid.NewGuid(), Key = "fadingSpeed", Value = "0", MachineId = MachineId.Get };
+                    var o = new Setting() { Id = Guid.NewGuid(), Key = "fadingSpeed", Value = "0", MachineId = MachineIdGenerator.Get };
                     _context.Settings.Add(o);
                     await _context.SaveChangesAsync();
                 }

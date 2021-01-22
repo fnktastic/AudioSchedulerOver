@@ -1,5 +1,6 @@
 
 using AudioSchedulerOver.DataAccess;
+using AudioSchedulerOver.Helper;
 using AudioSchedulerOver.Repository;
 using CommonServiceLocator;
 using GalaSoft.MvvmLight;
@@ -16,6 +17,8 @@ namespace AudioSchedulerOver.ViewModel
             SimpleIoc.Default.Register<MainViewModel>();
 
             SimpleIoc.Default.Register<Context>();
+
+            SimpleIoc.Default.Register<ISerialQueue, SerialQueue>();
 
             SimpleIoc.Default.Register<IAudioRepository, AudioRepository>();
             SimpleIoc.Default.Register<ISettingRepository, SettingRepository>();

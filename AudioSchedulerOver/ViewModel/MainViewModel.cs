@@ -28,10 +28,11 @@ namespace AudioSchedulerOver.ViewModel
     {
         private readonly PlayerService _playerService;
         private readonly AudioPlaybackScheduler _audioPlaybackScheduler;
-        private IAudioRepository _audioRepository;
-        private IScheduleRepository _scheduleRepository;
-        private ISettingRepository _settingRepository;
-        private IMachineRepository _machineRepository;
+        private readonly IAudioRepository _audioRepository;
+        private readonly IScheduleRepository _scheduleRepository;
+        private readonly ISettingRepository _settingRepository;
+        private readonly IMachineRepository _machineRepository;
+        private readonly ISerialQueue _serialQueue; 
 
         private ApplicationVolumeProvider _applicationVolumeProvider;
         private readonly Timer _uiTimer;
@@ -200,7 +201,7 @@ namespace AudioSchedulerOver.ViewModel
         }
         #endregion
 
-        public MainViewModel(IAudioRepository audioRepository, IScheduleRepository scheduleRepository, IMachineRepository machineRepository, ISettingRepository settingRepository)
+        public MainViewModel(IAudioRepository audioRepository, IScheduleRepository scheduleRepository, IMachineRepository machineRepository, ISettingRepository settingRepository, ISerialQueue serialQueue)
         {
             if (File.Exists(STARTUP_CONFIGS))
             {
@@ -213,6 +214,7 @@ namespace AudioSchedulerOver.ViewModel
             _scheduleRepository = scheduleRepository;
             _settingRepository = settingRepository;
             _machineRepository = machineRepository;
+            _serialQueue = serialQueue;
 
             var mediaPlayer = new MediaPlayer();
 
@@ -234,10 +236,10 @@ namespace AudioSchedulerOver.ViewModel
         {
             isAutoRunFired = false;
 
-            await _settingRepository.Init();
+            await _serialQueue.Enqueue(async () => await _settingRepository.Init());
 
-            var audios = await _audioRepository.GetAllAsync();
-            var schedules = (await _scheduleRepository.GetAllAsync()).Select(x => x.ConvertToScheduleViewModel());
+            var audios = await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync());
+            var schedules = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync())).Select(x => x.ConvertToScheduleViewModel());
 
             Audios = new ObservableCollection<Audio>(audios);
             Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
@@ -253,7 +255,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 if (loggedIn == false)
                 {
-                    Machine = await _machineRepository.SignIn(MachineId.Get);
+                    Machine = await _serialQueue.Enqueue(async () => await _machineRepository.SignIn(MachineIdGenerator.Get));
                     loggedIn = true;
                 }
             }
@@ -373,7 +375,7 @@ namespace AudioSchedulerOver.ViewModel
                     {
                         var audio = Audio.CreateInstnceFromPath(file);
 
-                        await _audioRepository.AddAsync(audio);
+                        await _serialQueue.Enqueue(async () => await _audioRepository.AddAsync(audio));
 
                         Audios.Add(audio);
                     }
@@ -421,7 +423,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 _audios.Remove(audio);
 
-                await _audioRepository.RemoveAsync(audio);
+                await _serialQueue.Enqueue(async () => await _audioRepository.RemoveAsync(audio));
             }
             catch (Exception e)
             {
@@ -536,7 +538,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 Schedules.Remove(scheduleViewModel);
 
-                await _scheduleRepository.RemoveAsync(scheduleViewModel.ConvertToSchedule());
+                await _serialQueue.Enqueue(async () => await _scheduleRepository.RemoveAsync(scheduleViewModel.ConvertToSchedule()));
             }
             catch (Exception e)
             {
@@ -564,7 +566,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                await _scheduleRepository.UpdateAsync(scheduleViewModel.ConvertToSchedule());
+                await _serialQueue.Enqueue(async () => await _scheduleRepository.UpdateAsync(scheduleViewModel.ConvertToSchedule()));
             }
             catch (Exception e)
             {
@@ -621,7 +623,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                await _settingRepository.Update(key, value);
+                await _serialQueue.Enqueue(async () => await _settingRepository.Update(key, value));
             }
             catch (Exception e)
             {
@@ -633,7 +635,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                return (await _settingRepository.Get(key)).Value;
+                return (await _serialQueue.Enqueue(async () => await _settingRepository.Get(key))).Value;
             }
             catch (Exception e)
             {
@@ -731,7 +733,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 foreach (var schedule in _schedules)
                 {
-                    await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule());
+                    await _serialQueue.Enqueue(async () => await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule()));
                 }
             }
             catch (Exception e)

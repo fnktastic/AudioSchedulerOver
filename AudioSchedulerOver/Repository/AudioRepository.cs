@@ -21,17 +21,11 @@ namespace AudioSchedulerOver.Repository
     }
     class AudioRepository : IAudioRepository
     {
-        private Context _context
-        {
-            get
-            {
-                return ServiceLocator.Current.GetInstance<Context>();
-            }
-        }
+        private readonly Context _context;
 
         public AudioRepository(Context context)
         {
-            //_context = context;
+            _context = context;
         }
 
         public async Task AddAsync(Audio audio)

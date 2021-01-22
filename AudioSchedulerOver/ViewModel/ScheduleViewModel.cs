@@ -153,7 +153,7 @@ namespace AudioSchedulerOver.ViewModel
                 DayEnum = this.DayEnum,
                 IsActive = this.IsActive,
                 Repeatedly = this.Repeatedly,
-                MachineId = MachineId.Get
+                MachineId = MachineIdGenerator.Get
             };
         }
 
