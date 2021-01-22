@@ -239,7 +239,8 @@ namespace AudioSchedulerOver.ViewModel
             await _serialQueue.Enqueue(async () => await _settingRepository.Init());
 
             var audios = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).Select(x => x.ConvertToAudioViewModel());
-            var schedules = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync())).Select(x => x.ConvertToScheduleViewModel());
+            var schedules = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync(MachineIdGenerator.Get))).Select(x => x.ConvertToScheduleViewModel());
+
 
             Audios = new ObservableCollection<AudioViewModel>(audios);
             Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
