@@ -24,6 +24,11 @@ namespace AudioSession
             catch { }
         }
 
+        public void ResetVolume()
+        {
+            SetApplicationVolume(pid: _processId, level: 100);
+        }
+
         public async Task SetApplicationVolume(float level, int fadingSpeed = 0)
         {
             var task = Task.Run(() =>

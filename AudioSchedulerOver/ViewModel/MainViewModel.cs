@@ -582,7 +582,7 @@ namespace AudioSchedulerOver.ViewModel
             try
             {
                 if (_applicationVolumeProvider != null)
-                    _applicationVolumeProvider.SetApplicationVolume(100).ConfigureAwait(false);
+                    _applicationVolumeProvider.ResetVolume();
             }
             catch (Exception e)
             {
@@ -591,7 +591,7 @@ namespace AudioSchedulerOver.ViewModel
                 Logger.Log.Error(e);
 
                 if (_applicationVolumeProvider != null)
-                   _applicationVolumeProvider.SetApplicationVolume(100).ConfigureAwait(false);
+                    _applicationVolumeProvider.ResetVolume();
             }
             finally
             {
@@ -645,6 +645,7 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
+        bool resetVolume = true;
         private bool EstablishConnection()
         {
             try
@@ -668,6 +669,12 @@ namespace AudioSchedulerOver.ViewModel
 
                 if (_applicationVolumeProvider.IsConnected)
                 {
+                    if (resetVolume)
+                    {
+                        _applicationVolumeProvider.ResetVolume();
+                        resetVolume = false;
+                    }
+
                     float? appVolume = _applicationVolumeProvider.GetApplicationVolume();
                     SuccessMessage = string.Format("App {0} is detected", _appName);
                     ErrorMessage = string.Empty;
