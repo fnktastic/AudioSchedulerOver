@@ -1,6 +1,7 @@
 ﻿using DeviceId;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +19,8 @@ namespace AudioSchedulerOver.Helper
                 .AddProcessorId()
                 .AddMotherboardSerialNumber()
                 .ToString();
+
+            File.WriteAllText("machineId.txt", _id);
         }
         public static string Get => _id;
 

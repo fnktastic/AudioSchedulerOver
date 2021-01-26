@@ -13,6 +13,7 @@ namespace AudioSchedulerOver.Model
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string FilePath { get; set; }
+        public string Metadata { get; set; }
 
         public static Audio CreateInstnceFromPath(string filePath)
         {
