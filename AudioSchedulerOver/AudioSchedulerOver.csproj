@@ -214,6 +214,7 @@
     <Compile Include="Exceptions\StationInactiveException.cs" />
     <Compile Include="Helper\MachineIdGenerator.cs" />
     <Compile Include="Helper\SerialQueue.cs" />
+    <Compile Include="Interface\IDirty.cs" />
     <Compile Include="Interface\IPlayable.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Model\Audio.cs" />

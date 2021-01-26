@@ -20,8 +20,6 @@ namespace AudioSchedulerOver.Repository
     {
         private readonly IDataContextFactory _dataContextFactory;
 
-        private Context context => _dataContextFactory.Instance;
-
         public MachineRepository(IDataContextFactory dataContextFactory)
         {
             _dataContextFactory = dataContextFactory;
@@ -31,33 +29,37 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                var machine = await context.Machines.FindAsync(machineId);
-
-                if (machine != null)
+                using (var context = _dataContextFactory.Instance)
                 {
-                    if (machine.IsActive == false) throw new StationInactiveException();
 
-                    machine.LatestLoginAt = DateTime.UtcNow;
+                    var machine = await context.Machines.FindAsync(machineId);
+
+                    if (machine != null)
+                    {
+                        if (machine.IsActive == false) throw new StationInactiveException();
+
+                        machine.LatestLoginAt = DateTime.UtcNow;
+
+                        await context.SaveChangesAsync();
+
+                        return machine;
+                    }
+
+                    var newMachine = new Machine()
+                    {
+                        Id = machineId,
+                        Name = name,
+                        IsActive = true,
+                        IsOnline = false,
+                        LatestLoginAt = DateTime.UtcNow
+                    };
+
+                    context.Machines.Add(newMachine);
 
                     await context.SaveChangesAsync();
 
-                    return machine;
+                    return newMachine;
                 }
-
-                var newMachine = new Machine()
-                {
-                    Id = machineId,
-                    Name = name,
-                    IsActive = true,
-                    IsOnline = false,
-                    LatestLoginAt = DateTime.UtcNow
-                };
-
-                context.Machines.Add(newMachine);
-
-                await context.SaveChangesAsync();
-
-                return newMachine;
             }
             catch (Exception e)
             {

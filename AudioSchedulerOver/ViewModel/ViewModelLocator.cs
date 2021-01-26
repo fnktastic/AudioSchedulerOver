@@ -14,17 +14,13 @@ namespace AudioSchedulerOver.ViewModel
         public ViewModelLocator()
         {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
-
-            SimpleIoc.Default.Register<MainViewModel>();
-
             SimpleIoc.Default.Register<IDataContextFactory, DataContextFactory>();
-
             SimpleIoc.Default.Register<ISerialQueue, SerialQueue>();
-
             SimpleIoc.Default.Register<IAudioRepository, AudioRepository>();
             SimpleIoc.Default.Register<ISettingRepository, SettingRepository>();
             SimpleIoc.Default.Register<IScheduleRepository, ScheduleRepository>();
             SimpleIoc.Default.Register<IMachineRepository, MachineRepository>();
+            SimpleIoc.Default.Register<MainViewModel>();
         }
 
         public MainViewModel Main

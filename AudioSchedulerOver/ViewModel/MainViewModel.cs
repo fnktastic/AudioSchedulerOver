@@ -285,7 +285,7 @@ namespace AudioSchedulerOver.ViewModel
 
             try
             {
-                if (loggedIn == false)
+                //if (loggedIn == false)
                 {
                     Machine = await _serialQueue.Enqueue(async () => await _machineRepository.SignIn(MachineIdGenerator.Get, MachineIdGenerator.Name));
                     loggedIn = true;
@@ -297,6 +297,9 @@ namespace AudioSchedulerOver.ViewModel
             }
 
             List<Schedule> schedulesDto = null;
+            List<Audio> audioDto = null;
+
+            audioDto = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).ToList();
 
             if (_machine.IsOnline)
             {
@@ -307,7 +310,7 @@ namespace AudioSchedulerOver.ViewModel
                 schedulesDto = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync())).ToList();
             }
 
-            var audios = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).Select(x => x.ConvertToAudioViewModel());
+            var audios = audioDto.Select(x => x.ConvertToAudioViewModel());
             var schedules = schedulesDto.Select(x => x.ConvertToScheduleViewModel());
 
             Audios = new ObservableCollection<AudioViewModel>(audios);
@@ -805,7 +808,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 foreach (var schedule in _schedules)
                 {
-                    await _serialQueue.Enqueue(async () => await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule()));
+                    //await _serialQueue.Enqueue(async () => await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule()));
                 }
             }
             catch (Exception e)

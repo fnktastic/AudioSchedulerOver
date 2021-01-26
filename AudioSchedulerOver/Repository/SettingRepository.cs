@@ -24,8 +24,6 @@ namespace AudioSchedulerOver.Repository
     {
         private readonly IDataContextFactory _dataContextFactory;
 
-        private Context context => _dataContextFactory.Instance;
-
         public SettingRepository(IDataContextFactory dataContextFactory)
         {
             _dataContextFactory = dataContextFactory;
@@ -35,7 +33,10 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                return await context.Settings.Where(x => x.MachineId == MachineIdGenerator.Get).FirstOrDefaultAsync(x => x.Key == key);
+                using (var context = _dataContextFactory.Instance)
+                {
+                    return await context.Settings.Where(x => x.MachineId == MachineIdGenerator.Get).FirstOrDefaultAsync(x => x.Key == key);
+                }
             }
             catch (Exception e)
             {
@@ -48,15 +49,18 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                if (value == null)
-                    value = string.Empty;
-
-                var dbEntry = await context.Settings.Where(x => x.MachineId == MachineIdGenerator.Get).FirstOrDefaultAsync(x => x.Key == key);
-                if (dbEntry != null)
+                using (var context = _dataContextFactory.Instance)
                 {
-                    dbEntry.Value = value;
+                    if (value == null)
+                        value = string.Empty;
 
-                    await context.SaveChangesAsync();
+                    var dbEntry = await context.Settings.Where(x => x.MachineId == MachineIdGenerator.Get).FirstOrDefaultAsync(x => x.Key == key);
+                    if (dbEntry != null)
+                    {
+                        dbEntry.Value = value;
+
+                        await context.SaveChangesAsync();
+                    }
                 }
             }
             catch (Exception e)
@@ -69,28 +73,31 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                var appName = await Get("appName");
-                if (appName == null)
+                using (var context = _dataContextFactory.Instance)
                 {
-                    var i = new Setting() { Id = Guid.NewGuid(), Key = "appName", Value = "<app name>", MachineId = MachineIdGenerator.Get };
-                    context.Settings.Add(i);
-                    await context.SaveChangesAsync();
-                }
+                    var appName = await Get("appName");
+                    if (appName == null)
+                    {
+                        var i = new Setting() { Id = Guid.NewGuid(), Key = "appName", Value = "<app name>", MachineId = MachineIdGenerator.Get };
+                        context.Settings.Add(i);
+                        var res = await context.SaveChangesAsync();
+                    }
 
-                var tagetVolume = await Get("tagetVolume");
-                if (tagetVolume == null)
-                {
-                    var o = new Setting() { Id = Guid.NewGuid(), Key = "tagetVolume", Value = "27", MachineId = MachineIdGenerator.Get };
-                    context.Settings.Add(o);
-                    await context.SaveChangesAsync();
-                }
+                    var tagetVolume = await Get("tagetVolume");
+                    if (tagetVolume == null)
+                    {
+                        var o = new Setting() { Id = Guid.NewGuid(), Key = "tagetVolume", Value = "27", MachineId = MachineIdGenerator.Get };
+                        context.Settings.Add(o);
+                        await context.SaveChangesAsync();
+                    }
 
-                var fadingSpeed = await Get("fadingSpeed");
-                if (fadingSpeed == null)
-                {
-                    var o = new Setting() { Id = Guid.NewGuid(), Key = "fadingSpeed", Value = "0", MachineId = MachineIdGenerator.Get };
-                    context.Settings.Add(o);
-                    await context.SaveChangesAsync();
+                    var fadingSpeed = await Get("fadingSpeed");
+                    if (fadingSpeed == null)
+                    {
+                        var o = new Setting() { Id = Guid.NewGuid(), Key = "fadingSpeed", Value = "0", MachineId = MachineIdGenerator.Get };
+                        context.Settings.Add(o);
+                        await context.SaveChangesAsync();
+                    }
                 }
             }
             catch (Exception e)

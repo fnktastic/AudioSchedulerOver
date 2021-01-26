@@ -8,6 +8,7 @@ using AudioSchedulerOver.DataAccess;
 using System.Data.Entity;
 using AudioSchedulerOver.Logging;
 using CommonServiceLocator;
+using AudioSchedulerOver.Helper;
 
 namespace AudioSchedulerOver.Repository
 {
@@ -23,8 +24,6 @@ namespace AudioSchedulerOver.Repository
     {
         private readonly IDataContextFactory _dataContextFactory;
 
-        private Context context => _dataContextFactory.Instance;
-
         public ScheduleRepository(IDataContextFactory dataContextFactory)
         {
             _dataContextFactory = dataContextFactory;
@@ -34,9 +33,12 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                context.Schedules.Add(schedule);
+                using (var context = _dataContextFactory.Instance)
+                {
+                    context.Schedules.Add(schedule);
 
-                await context.SaveChangesAsync();
+                    await context.SaveChangesAsync();
+                }
             }
             catch (Exception e)
             {
@@ -48,12 +50,15 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                if(machineId != null)
+                using (var context = _dataContextFactory.Instance)
                 {
-                    return await context.Schedules.Where(x => x.MachineId == machineId).Include(x => x.Audio).ToListAsync();
-                }
+                    if (machineId != null)
+                    {
+                        return await context.Schedules.Where(x => x.MachineId == machineId).Include(x => x.Audio).ToListAsync();
+                    }
 
-                return await context.Schedules.Include(x => x.Audio).ToListAsync();
+                    return await context.Schedules.Include(x => x.Audio).ToListAsync();
+                }
             }
             catch (Exception e)
             {
@@ -66,13 +71,16 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                var dbEntry = await context.Schedules.FindAsync(schedule.Id);
-                if (dbEntry != null)
+                using (var context = _dataContextFactory.Instance)
                 {
-                    context.Entry(dbEntry).State = EntityState.Deleted;
-                }
+                    var dbEntry = await context.Schedules.FindAsync(schedule.Id);
+                    if (dbEntry != null)
+                    {
+                        context.Entry(dbEntry).State = EntityState.Deleted;
+                    }
 
-                await context.SaveChangesAsync();
+                    await context.SaveChangesAsync();
+                }
             }
             catch (Exception e)
             {
@@ -84,24 +92,29 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                var dbEntry = await context.Schedules.FindAsync(schedule.Id);
-
-                if (dbEntry != null)
+                using (var context = _dataContextFactory.Instance)
                 {
-                    dbEntry.AudioId = schedule.AudioId;
-                    dbEntry.Interval = schedule.Interval;
-                    dbEntry.IntervalEnum = schedule.IntervalEnum;
-                    dbEntry.StartDate = schedule.StartDate;
-                    dbEntry.DayEnum = schedule.DayEnum;
-                    dbEntry.IsActive = schedule.IsActive;
-                    dbEntry.Repeatedly = schedule.Repeatedly;
 
-                    await context.SaveChangesAsync();
-                }
-                else
-                {
-                    schedule.Audio = null;
-                    await AddAsync(schedule);
+                    var dbEntry = await context.Schedules.FindAsync(schedule.Id);
+
+                    if (dbEntry != null)
+                    {
+                        dbEntry.AudioId = schedule.AudioId;
+                        dbEntry.Interval = schedule.Interval;
+                        dbEntry.IntervalEnum = schedule.IntervalEnum;
+                        dbEntry.StartDate = schedule.StartDate;
+                        dbEntry.DayEnum = schedule.DayEnum;
+                        dbEntry.IsActive = schedule.IsActive;
+                        dbEntry.Repeatedly = schedule.Repeatedly;
+
+                        await context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        schedule.Audio = null;
+                        schedule.MachineId = MachineIdGenerator.Get;
+                        await AddAsync(schedule);
+                    }
                 }
             }
             catch (Exception e)

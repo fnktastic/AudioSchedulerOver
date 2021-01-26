@@ -19,10 +19,10 @@ namespace AudioSchedulerOver.DataAccess
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<Setting> Settings { get; set; }
 
-        public override Task<int> SaveChangesAsync()
+        /*public override Task<int> SaveChangesAsync()
         {
             return base.SaveChangesAsync();
-        }
+        }**/
     }
 
     public class DataInitializer : DropCreateDatabaseIfModelChanges<Context>

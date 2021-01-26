@@ -15,6 +15,7 @@ namespace AudioSchedulerOver.ViewModel
     {
         public AudioViewModel Audio { get; set; }
 
+        public string MachineId { get; set; }
         public Guid ScheduleId { get; set; }
 
         private IntervalEnum _intervalEnum;
@@ -147,6 +148,7 @@ namespace AudioSchedulerOver.ViewModel
             return new Schedule()
             {
                 Audio = this.Audio.ConvertToAudio(),
+                MachineId = this.MachineId,
                 AudioId = this.Audio.Id,
                 Id = this.ScheduleId,
                 Interval = this.Interval,
@@ -154,8 +156,7 @@ namespace AudioSchedulerOver.ViewModel
                 StartDate = this.StartDate.Ticks,
                 DayEnum = this.DayEnum,
                 IsActive = this.IsActive,
-                Repeatedly = this.Repeatedly,
-                MachineId = MachineIdGenerator.Get
+                Repeatedly = this.Repeatedly
             };
         }
 

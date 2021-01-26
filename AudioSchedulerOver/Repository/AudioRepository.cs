@@ -23,8 +23,6 @@ namespace AudioSchedulerOver.Repository
     {
         private readonly IDataContextFactory _dataContextFactory;
 
-        private Context context => _dataContextFactory.Instance;
-
         public AudioRepository(IDataContextFactory dataContextFactory)
         {
             _dataContextFactory = dataContextFactory;
@@ -34,9 +32,12 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                context.Audios.Add(audio);
+                using (var context = _dataContextFactory.Instance)
+                {
+                    context.Audios.Add(audio);
 
-                await context.SaveChangesAsync();
+                    await context.SaveChangesAsync();
+                }
             }
             catch (Exception e)
             {
@@ -48,7 +49,10 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                return await context.Audios.ToListAsync();
+                using (var context = _dataContextFactory.Instance)
+                {
+                    return await context.Audios.ToListAsync();
+                }
             }
             catch (Exception e)
             {
@@ -61,13 +65,16 @@ namespace AudioSchedulerOver.Repository
         {
             try
             {
-                var dbEntry = await context.Audios.FindAsync(audio.Id);
-                if (dbEntry != null)
+                using (var context = _dataContextFactory.Instance)
                 {
-                    context.Entry(dbEntry).State = EntityState.Deleted;
-                }
+                    var dbEntry = await context.Audios.FindAsync(audio.Id);
+                    if (dbEntry != null)
+                    {
+                        context.Entry(dbEntry).State = EntityState.Deleted;
+                    }
 
-                await context.SaveChangesAsync();
+                    await context.SaveChangesAsync();
+                }
             }
             catch (Exception e)
             {
