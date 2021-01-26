@@ -43,7 +43,7 @@ namespace AudioSchedulerOver.ViewModel
 
         private const int AUTOCHECK_INTERVAL = 3;
 
-        private readonly double autoReloadInterval = 1;
+        private readonly double autoReloadInterval = 0.2;
 
         private const string STARTUP_CONFIGS = "startupConfigs.txt";
 
@@ -259,6 +259,7 @@ namespace AudioSchedulerOver.ViewModel
             _serialQueue = serialQueue;
             _playerService = new PlayerService(mediaPlayer);
             _audioPlaybackScheduler = new AudioPlaybackScheduler();
+            Schedules = new ObservableCollection<ScheduleViewModel>();
 
             _uiTimer = new Timer()
             {
@@ -304,7 +305,15 @@ namespace AudioSchedulerOver.ViewModel
             }
 
             var audios = audioDto.Select(x => x.ConvertToAudioViewModel());
-            var schedules = schedulesDto.Select(x => x.ConvertToScheduleViewModel());
+            var schedules = schedulesDto.Select(x => 
+            {
+                var entry = _schedules.FirstOrDefault(y => y.ScheduleId == x.Id);
+
+                if (entry != null && entry.IsDirty)
+                    return entry;
+
+                return x.ConvertToScheduleViewModel();
+            });
 
             if (loggedIn == false)
                 await _serialQueue.Enqueue(async () => await _settingRepository.Init());
@@ -517,6 +526,8 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
+                scheduleViewModel.MakeDirty();
+
                 AudioViewModel audio = scheduleViewModel.Audio;
                 TimeSpan start = scheduleViewModel.StartDate;
                 int interval = scheduleViewModel.Interval;
@@ -562,6 +573,8 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
+                scheduleViewModel.MakeDirty();
+
                 _audioPlaybackScheduler.KillSchedule(scheduleViewModel.ScheduleId);
 
                 scheduleViewModel.IsActive = false;

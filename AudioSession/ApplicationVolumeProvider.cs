@@ -26,7 +26,7 @@ namespace AudioSession
 
         public void ResetVolume()
         {
-            SetApplicationVolume(pid: _processId, level: 100);
+            LowLevelSetApplicationVolume(_processId, 100);
         }
 
         public async Task SetApplicationVolume(float level, int fadingSpeed = 0)
@@ -49,7 +49,7 @@ namespace AudioSession
                             if (fadingSpeed > 0)
                                 Thread.Sleep(fadingSpeed);
 
-                            SetApplicationVolume(_processId, i);
+                            LowLevelSetApplicationVolume(_processId, i);
                         }
 
                         return;
@@ -62,7 +62,7 @@ namespace AudioSession
                             if (fadingSpeed > 0)
                                 Thread.Sleep(fadingSpeed);
 
-                            SetApplicationVolume(_processId, i);
+                            LowLevelSetApplicationVolume(_processId, i);
                         }
 
                         return;
@@ -132,7 +132,7 @@ namespace AudioSession
             return mute;
         }
 
-        private static void SetApplicationVolume(int pid, float level)
+        private static void LowLevelSetApplicationVolume(int pid, float level)
         {
             ISimpleAudioVolume volume = GetVolumeObject(pid);
             if (volume == null)

@@ -165,6 +165,7 @@ namespace AudioSchedulerOver.ViewModel
         private bool _dirty;
         public bool IsDirty => _dirty;
         public void CleanObject() => _dirty = false;
+        public void MakeDirty() => _dirty = true;
 
         public Schedule ConvertToSchedule()
         {

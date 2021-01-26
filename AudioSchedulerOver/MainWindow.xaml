@@ -17,7 +17,7 @@
         DataContext="{Binding Main, Source={StaticResource Locator}}"
          Title="Audio Scheduler | 1.8.0.0 (.NET 4.7)" Height="450" Width="1200">
     <i:Interaction.Triggers>
-        <i:EventTrigger EventName="Closing">
+        <i:EventTrigger EventName="Closed">
             <cmd:EventToCommand Command="{Binding OnAppCloseCommand}" PassEventArgsToCommand="True" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
@@ -163,7 +163,7 @@
                                             </Grid.ColumnDefinitions>
 
                                             <Grid x:Name="hour" Focusable="True">
-                                                <TextBox Width="30" TextWrapping="Wrap" Text="{Binding Hours}"
+                                                <TextBox Width="30" TextWrapping="Wrap" Text="{Binding Hours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                      TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
                                             </Grid>
 
@@ -173,7 +173,7 @@
                                             </Grid>
 
                                             <Grid Grid.Column="2" Focusable="True">
-                                                <TextBox Width="30" x:Name="ddTxt"  TextWrapping="Wrap" Text="{Binding Minutes}" TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+                                                <TextBox Width="30" x:Name="ddTxt"  TextWrapping="Wrap" Text="{Binding Minutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
                                             </Grid>
 
                                             <Grid Grid.Column="3">
@@ -181,7 +181,7 @@
                                             </Grid>
 
                                             <Grid Grid.Column="4" Focusable="True">
-                                                <TextBox Width="30" x:Name="yyTxt"  TextWrapping="Wrap" Text="{Binding Seconds}" TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+                                                <TextBox Width="30" x:Name="yyTxt"  TextWrapping="Wrap" Text="{Binding Seconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
                                             </Grid>
                                         </Grid>
                                     </WrapPanel>
