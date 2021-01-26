@@ -48,13 +48,13 @@
             <RowDefinition Height="30" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBox Text="{Binding AudiosSearchTerm, UpdateSourceTrigger=PropertyChanged}" 
+        <TextBox IsEnabled="{Binding UiUnLocked}" Text="{Binding AudiosSearchTerm, UpdateSourceTrigger=PropertyChanged}" 
                                  VerticalContentAlignment="Center"
                                  Grid.Row="0" Grid.Column="0"
                                  Style="{DynamicResource SearchMetroTextBox}"
                                  Margin="0 0 0 2"
                                  Controls:TextBoxHelper.Watermark="filter audios" />
-        <GroupBox Header="Audios" Grid.Row="1" Grid.Column="0">
+        <GroupBox IsEnabled="{Binding UiUnLocked}" Header="Audios" Grid.Row="1" Grid.Column="0">
             <ListView AllowDrop="True" BorderThickness="0"
                   ItemsSource="{Binding FilteredAudiosCollection}">
                 <i:Interaction.Triggers>
@@ -96,7 +96,7 @@
             </ListView>
         </GroupBox>
 
-        <GroupBox Margin="3 0 0 0" Header="Schedule" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
+        <GroupBox IsEnabled="{Binding UiUnLocked}" Margin="3 0 0 0" Header="Schedule" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
             <ListView ItemsSource="{Binding Schedules}" BorderThickness="0">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -199,28 +199,34 @@
 
         <GroupBox Margin="3 0 0 0" Header="Music Player Configs" Grid.Row="0" Grid.RowSpan="2" Grid.Column="2">
             <StackPanel>
-                <TextBlock Text="Target Music Player Name" />
-                <TextBox Text="{Binding AppName, UpdateSourceTrigger=PropertyChanged}" />
+                <StackPanel Margin="0 0 0 20" Visibility="{Binding UiUnLocked, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                    <TextBlock Text="UI Unlock Password" />
+                    <TextBox Text="{Binding UIUnlockPassword, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel IsEnabled="{Binding UiUnLocked}">
+                    <TextBlock Text="Target Music Player Name" />
+                    <TextBox Text="{Binding AppName, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Text="{Binding SuccessMessage}" TextAlignment="Center" Margin="0 10 0 0" TextWrapping="Wrap" Foreground="Green"  HorizontalAlignment="Center" VerticalAlignment="Top" />
-                <TextBlock Text="{Binding ErrorMessage}" TextAlignment="Center" Margin="0 -10 0 0" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                    <TextBlock Text="{Binding SuccessMessage}" TextAlignment="Center" Margin="0 10 0 0" TextWrapping="Wrap" Foreground="Green"  HorizontalAlignment="Center" VerticalAlignment="Top" />
+                    <TextBlock Text="{Binding ErrorMessage}" TextAlignment="Center" Margin="0 -10 0 0" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Center" VerticalAlignment="Top" />
 
-                <TextBlock Text="Master Volume" Margin="0 10 0 0" />
-                <WrapPanel>
-                    <Slider Width="205" Minimum="0" Maximum="100"  Value="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
-                    <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="15 0 0 0" Width="35" Text="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
-                </WrapPanel>
+                    <TextBlock Text="Master Volume" Margin="0 10 0 0" />
+                    <WrapPanel>
+                        <Slider Width="205" Minimum="0" Maximum="100"  Value="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                        <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="15 0 0 0" Width="35" Text="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    </WrapPanel>
 
-                <TextBlock Text="Fading Smooth" Margin="0 10 0 0" ToolTip="0 - Fast, 35 - Slow" />
-                <WrapPanel ToolTip="0 - Fast, 35 - Slow">
-                    <Slider Width="205" Minimum="0" Maximum="35" Value="{Binding FadingSpeed, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
-                    <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="15 0 0 0" Width="35" Text="{Binding FadingSpeed, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
-                </WrapPanel>
+                    <TextBlock Text="Fading Smooth" Margin="0 10 0 0" ToolTip="0 - Fast, 35 - Slow" />
+                    <WrapPanel ToolTip="0 - Fast, 35 - Slow">
+                        <Slider Width="205" Minimum="0" Maximum="35" Value="{Binding FadingSpeed, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                        <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="15 0 0 0" Width="35" Text="{Binding FadingSpeed, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    </WrapPanel>
 
-                <Button Content="Connect" Margin="15" 
+                    <Button Content="Connect" Margin="15" 
                         IsEnabled="{Binding IsConnectSuccess, Converter={StaticResource InverseBoolConverter}}"
                         Command="{Binding ConnectToAppCommnd}"/>
-                <Button Visibility="Hidden" VerticalAlignment="Bottom" Content="Save app name and volume" Margin="15" Command="{Binding SaveCommandCommnd}"/>
+                    <Button Visibility="Hidden" VerticalAlignment="Bottom" Content="Save app name and volume" Margin="15" Command="{Binding SaveCommandCommnd}"/>
+                </StackPanel>
             </StackPanel>
         </GroupBox>
     </Grid>

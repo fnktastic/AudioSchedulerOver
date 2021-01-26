@@ -32,12 +32,14 @@ namespace AudioSchedulerOver.ViewModel
         private readonly IScheduleRepository _scheduleRepository;
         private readonly ISettingRepository _settingRepository;
         private readonly IMachineRepository _machineRepository;
-        private readonly ISerialQueue _serialQueue; 
+        private readonly ISerialQueue _serialQueue;
 
         private ApplicationVolumeProvider _applicationVolumeProvider;
         private readonly Timer _uiTimer;
 
         private const string APP = "Y.Music";
+
+        private const string uiUnlockPassword = @"Q'?2\zX4`MTpYD55";
 
         private const int AUTOCHECK_INTERVAL = 3;
 
@@ -133,6 +135,35 @@ namespace AudioSchedulerOver.ViewModel
             {
                 _successMessage = value;
                 RaisePropertyChanged(nameof(SuccessMessage));
+            }
+        }
+
+        private string _uiUnlockPassword;
+        public string UIUnlockPassword
+        {
+            get { return _uiUnlockPassword; }
+            set
+            {
+                _uiUnlockPassword = value;
+                RaisePropertyChanged(nameof(UIUnlockPassword));
+
+                if (_uiUnLocked == false)
+                    if (_uiUnlockPassword == uiUnlockPassword)
+                    {
+                        UiUnLocked = true;
+                        UIUnlockPassword = string.Empty;
+                    }
+            }
+        }
+
+        private bool _uiUnLocked;
+        public bool UiUnLocked
+        {
+            get { return _uiUnLocked; }
+            set
+            {
+                _uiUnLocked = value;
+                RaisePropertyChanged(nameof(UiUnLocked));
             }
         }
 
@@ -337,7 +368,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                var audio = obj as Audio;
+                var audio = obj as AudioViewModel;
 
                 if (string.IsNullOrWhiteSpace(_audiosSearchTerm))
                 {
