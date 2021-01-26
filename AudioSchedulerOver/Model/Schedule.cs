@@ -36,7 +36,7 @@ namespace AudioSchedulerOver.Model
         {
             var timeSpan = TimeSpan.FromTicks(this.StartDate);
 
-            return new ScheduleViewModel()
+            var scheduleViewModel = new ScheduleViewModel()
             {
                 Audio = this.Audio.ConvertToAudioViewModel(),
                 MachineId = this.MachineId,
@@ -51,6 +51,10 @@ namespace AudioSchedulerOver.Model
                 IsActive = this.IsActive,
                 Repeatedly = this.Repeatedly,
             };
+
+            scheduleViewModel.CleanObject();
+
+            return scheduleViewModel;
         }
     }
 }

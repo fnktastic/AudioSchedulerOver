@@ -43,7 +43,7 @@ namespace AudioSchedulerOver.ViewModel
 
         private const int AUTOCHECK_INTERVAL = 3;
 
-        private readonly double autoReloadInterval = 0.5;
+        private readonly double autoReloadInterval = 0.2;
 
         private const string STARTUP_CONFIGS = "startupConfigs.txt";
 
@@ -56,8 +56,6 @@ namespace AudioSchedulerOver.ViewModel
         private bool loggedIn = false;
 
         public static int Fading_Speed = 0;
-
-        private readonly object _locker = new object();
 
         #region properties
         private ObservableCollection<AudioViewModel> _audios;
@@ -285,11 +283,8 @@ namespace AudioSchedulerOver.ViewModel
 
             try
             {
-                //if (loggedIn == false)
-                {
-                    Machine = await _serialQueue.Enqueue(async () => await _machineRepository.SignIn(MachineIdGenerator.Get, MachineIdGenerator.Name));
-                    loggedIn = true;
-                }
+                Machine = await _serialQueue.Enqueue(async () => await _machineRepository.SignIn(MachineIdGenerator.Get, MachineIdGenerator.Name));
+                loggedIn = true;
             }
             catch (StationInactiveException)
             {
@@ -808,7 +803,12 @@ namespace AudioSchedulerOver.ViewModel
             {
                 foreach (var schedule in _schedules)
                 {
-                    //await _serialQueue.Enqueue(async () => await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule()));
+                    if (schedule.IsDirty)
+                    {
+                        await _serialQueue.Enqueue(async () => await _scheduleRepository.UpdateAsync(schedule.ConvertToSchedule()));
+
+                        schedule.CleanObject();
+                    }
                 }
             }
             catch (Exception e)

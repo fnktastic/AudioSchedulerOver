@@ -11,10 +11,9 @@ using System.Threading.Tasks;
 
 namespace AudioSchedulerOver.ViewModel
 {
-    public class ScheduleViewModel : ViewModelBase, IPlayable
+    public class ScheduleViewModel : ViewModelBase, IPlayable, IDirty
     {
         public AudioViewModel Audio { get; set; }
-
         public string MachineId { get; set; }
         public Guid ScheduleId { get; set; }
 
@@ -24,8 +23,10 @@ namespace AudioSchedulerOver.ViewModel
             get { return _intervalEnum; }
             set
             {
+                if (_intervalEnum == value) return;
                 _intervalEnum = value;
                 RaisePropertyChanged(nameof(IntervalEnum));
+                _dirty = true;
             }
         }
 
@@ -35,8 +36,10 @@ namespace AudioSchedulerOver.ViewModel
             get { return _dayEnum; }
             set
             {
+                if (_dayEnum == value) return;
                 _dayEnum = value;
                 RaisePropertyChanged(nameof(DayEnum));
+                _dirty = true;
             }
         }
 
@@ -46,8 +49,10 @@ namespace AudioSchedulerOver.ViewModel
             get { return _interval; }
             set
             {
+                if (_interval == value) return;
                 _interval = value;
                 RaisePropertyChanged(nameof(Interval));
+                _dirty = true;
             }
         }
 
@@ -57,45 +62,52 @@ namespace AudioSchedulerOver.ViewModel
             get { return _startDate; }
             set
             {
+                if (_startDate == value) return;
                 _startDate = value;
                 RaisePropertyChanged(nameof(StartDate));
+                _dirty = true;
             }
         }
 
         private int _hours;
-        private int _minutes;
-        private int _seconds;
-
         public int Hours
         {
             get { return _hours; }
             set
             {
+                if (_hours == value) return;
                 _hours = value;
                 RaisePropertyChanged(nameof(Hours));
                 UpdateTimeSpan();
+                _dirty = true;
             }
         }
 
+        private int _minutes;
         public int Minutes
         {
             get { return _minutes; }
             set
             {
+                if (_minutes == value) return;
                 _minutes = value;
                 RaisePropertyChanged(nameof(Minutes));
                 UpdateTimeSpan();
+                _dirty = true;
             }
         }
 
+        private int _seconds;
         public int Seconds
         {
             get { return _seconds; }
             set
             {
+                if (_seconds == value) return;
                 _seconds = value;
                 RaisePropertyChanged(nameof(Seconds));
                 UpdateTimeSpan();
+                _dirty = true;
             }
         }
 
@@ -105,8 +117,10 @@ namespace AudioSchedulerOver.ViewModel
             get { return _isActive; }
             set
             {
+                if (_isActive == value) return;
                 _isActive = value;
                 RaisePropertyChanged(nameof(IsActive));
+                _dirty = true;
             }
         }
 
@@ -116,8 +130,10 @@ namespace AudioSchedulerOver.ViewModel
             get { return _isPlaying; }
             set
             {
+                if (_isPlaying == value) return;
                 _isPlaying = value;
                 RaisePropertyChanged(nameof(IsPlaying));
+                _dirty = true;
             }
         }
 
@@ -127,8 +143,10 @@ namespace AudioSchedulerOver.ViewModel
             get { return _repeatedly; }
             set
             {
+                if (_repeatedly == value) return;
                 _repeatedly = value;
                 RaisePropertyChanged(nameof(Repeatedly));
+                _dirty = true;
             }
         }
 
@@ -138,10 +156,15 @@ namespace AudioSchedulerOver.ViewModel
             get { return _nextFire; }
             set
             {
+                if (_nextFire == value) return;
                 _nextFire = value;
                 RaisePropertyChanged(nameof(NextFire));
             }
         }
+
+        private bool _dirty;
+        public bool IsDirty => _dirty;
+        public void CleanObject() => _dirty = false;
 
         public Schedule ConvertToSchedule()
         {
