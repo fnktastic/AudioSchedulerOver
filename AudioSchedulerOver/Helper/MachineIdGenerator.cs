@@ -20,5 +20,7 @@ namespace AudioSchedulerOver.Helper
                 .ToString();
         }
         public static string Get => _id;
+
+        public static string Name => Environment.MachineName;
     }
 }

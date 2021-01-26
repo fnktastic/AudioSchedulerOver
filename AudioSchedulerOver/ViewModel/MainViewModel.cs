@@ -270,7 +270,7 @@ namespace AudioSchedulerOver.ViewModel
             await _serialQueue.Enqueue(async () => await _settingRepository.Init());
 
             var audios = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).Select(x => x.ConvertToAudioViewModel());
-            var schedules = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync(MachineIdGenerator.Get))).Select(x => x.ConvertToScheduleViewModel());
+            var schedules = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync(/*MachineIdGenerator.Get*/))).Select(x => x.ConvertToScheduleViewModel());
 
 
             Audios = new ObservableCollection<AudioViewModel>(audios);
@@ -287,7 +287,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 if (loggedIn == false)
                 {
-                    Machine = await _serialQueue.Enqueue(async () => await _machineRepository.SignIn(MachineIdGenerator.Get));
+                    Machine = await _serialQueue.Enqueue(async () => await _machineRepository.SignIn(MachineIdGenerator.Get, MachineIdGenerator.Name));
                     loggedIn = true;
                 }
             }

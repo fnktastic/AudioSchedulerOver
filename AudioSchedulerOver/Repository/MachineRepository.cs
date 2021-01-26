@@ -13,7 +13,7 @@ namespace AudioSchedulerOver.Repository
 {
     public interface IMachineRepository
     {
-        Task<Machine> SignIn(string machineId);
+        Task<Machine> SignIn(string machineId, string name);
     }
 
     public class MachineRepository : IMachineRepository
@@ -25,7 +25,7 @@ namespace AudioSchedulerOver.Repository
             _context = context;
         }
 
-        public async Task<Machine> SignIn(string machineId)
+        public async Task<Machine> SignIn(string machineId, string name)
         {
             try
             {
@@ -45,6 +45,7 @@ namespace AudioSchedulerOver.Repository
                 var newMachine = new Machine()
                 {
                     Id = machineId,
+                    Name = name,
                     IsActive = true,
                     IsOnline = true,
                     LatestLoginAt = DateTime.UtcNow
