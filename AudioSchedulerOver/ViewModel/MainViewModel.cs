@@ -43,7 +43,7 @@ namespace AudioSchedulerOver.ViewModel
 
         private const int AUTOCHECK_INTERVAL = 3;
 
-        private readonly double autoReloadInterval = 0.2;
+        private readonly double autoReloadInterval = 1;
 
         private const string STARTUP_CONFIGS = "startupConfigs.txt";
 
@@ -279,7 +279,10 @@ namespace AudioSchedulerOver.ViewModel
         {
             isAutoRunFired = false;
 
-            await _serialQueue.Enqueue(async () => await _settingRepository.Init());
+            List<Schedule> schedulesDto = null;
+            List<Audio> audioDto = null;
+
+            audioDto = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).ToList();
 
             try
             {
@@ -290,11 +293,6 @@ namespace AudioSchedulerOver.ViewModel
             {
                 Application.Current.Shutdown(-1);
             }
-
-            List<Schedule> schedulesDto = null;
-            List<Audio> audioDto = null;
-
-            audioDto = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).ToList();
 
             if (_machine.IsOnline)
             {
@@ -307,6 +305,9 @@ namespace AudioSchedulerOver.ViewModel
 
             var audios = audioDto.Select(x => x.ConvertToAudioViewModel());
             var schedules = schedulesDto.Select(x => x.ConvertToScheduleViewModel());
+
+            if (loggedIn == false)
+                await _serialQueue.Enqueue(async () => await _settingRepository.Init());
 
             Audios = new ObservableCollection<AudioViewModel>(audios);
             Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
