@@ -22,18 +22,20 @@ namespace AudioSchedulerOver.Repository
 
     public class SettingRepository : ISettingRepository
     {
-        private readonly Context _context;
+        private readonly IDataContextFactory _dataContextFactory;
 
-        public SettingRepository(Context context)
+        private Context context => _dataContextFactory.Instance;
+
+        public SettingRepository(IDataContextFactory dataContextFactory)
         {
-            _context = context;
+            _dataContextFactory = dataContextFactory;
         }
 
         public async Task<Setting> Get(string key)
         {
             try
             {
-                return await _context.Settings.Where(x => x.MachineId == MachineIdGenerator.Get).FirstOrDefaultAsync(x => x.Key == key);
+                return await context.Settings.Where(x => x.MachineId == MachineIdGenerator.Get).FirstOrDefaultAsync(x => x.Key == key);
             }
             catch (Exception e)
             {
@@ -49,12 +51,12 @@ namespace AudioSchedulerOver.Repository
                 if (value == null)
                     value = string.Empty;
 
-                var dbEntry = await _context.Settings.Where(x => x.MachineId == MachineIdGenerator.Get).FirstOrDefaultAsync(x => x.Key == key);
+                var dbEntry = await context.Settings.Where(x => x.MachineId == MachineIdGenerator.Get).FirstOrDefaultAsync(x => x.Key == key);
                 if (dbEntry != null)
                 {
                     dbEntry.Value = value;
 
-                    await _context.SaveChangesAsync();
+                    await context.SaveChangesAsync();
                 }
             }
             catch (Exception e)
@@ -71,24 +73,24 @@ namespace AudioSchedulerOver.Repository
                 if (appName == null)
                 {
                     var i = new Setting() { Id = Guid.NewGuid(), Key = "appName", Value = "<app name>", MachineId = MachineIdGenerator.Get };
-                    _context.Settings.Add(i);
-                    await _context.SaveChangesAsync();
+                    context.Settings.Add(i);
+                    await context.SaveChangesAsync();
                 }
 
                 var tagetVolume = await Get("tagetVolume");
                 if (tagetVolume == null)
                 {
                     var o = new Setting() { Id = Guid.NewGuid(), Key = "tagetVolume", Value = "27", MachineId = MachineIdGenerator.Get };
-                    _context.Settings.Add(o);
-                    await _context.SaveChangesAsync();
+                    context.Settings.Add(o);
+                    await context.SaveChangesAsync();
                 }
 
                 var fadingSpeed = await Get("fadingSpeed");
                 if (fadingSpeed == null)
                 {
                     var o = new Setting() { Id = Guid.NewGuid(), Key = "fadingSpeed", Value = "0", MachineId = MachineIdGenerator.Get };
-                    _context.Settings.Add(o);
-                    await _context.SaveChangesAsync();
+                    context.Settings.Add(o);
+                    await context.SaveChangesAsync();
                 }
             }
             catch (Exception e)

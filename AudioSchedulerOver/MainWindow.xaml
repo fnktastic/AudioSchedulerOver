@@ -38,196 +38,206 @@
         <converter:InverseBoolConverter x:Key="InverseBoolConverter" />
         <converter:TimeSpanConverter x:Key="TimeSpanConverter" />
     </Controls:MetroWindow.Resources>
-    <Grid Margin="10">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="270" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="275" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <TextBox IsEnabled="{Binding UiUnLocked}" Text="{Binding AudiosSearchTerm, UpdateSourceTrigger=PropertyChanged}" 
+    <Grid>
+        <Grid Visibility="{Binding PasswordScreen, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+            <StackPanel VerticalAlignment="Center" Width="250"
+                        Margin="0 0 0 20" Visibility="{Binding UiUnLocked, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <TextBox 
+                         Controls:TextBoxHelper.Watermark="password"
+                         Text="{Binding UIUnlockPassword, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Content="Skip" FontStyle="Italic" Command="{Binding SkipPasswordCommand}" />
+            </StackPanel>
+        </Grid>
+        <Grid Visibility="{Binding PasswordScreen, Converter={StaticResource BoolToVisibleOrCollapsed}}" Margin="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="270" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="275" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBox IsEnabled="{Binding UiUnLocked}" Text="{Binding AudiosSearchTerm, UpdateSourceTrigger=PropertyChanged}" 
                                  VerticalContentAlignment="Center"
                                  Grid.Row="0" Grid.Column="0"
                                  Style="{DynamicResource SearchMetroTextBox}"
                                  Margin="0 0 0 2"
                                  Controls:TextBoxHelper.Watermark="filter audios" />
-        <GroupBox IsEnabled="{Binding UiUnLocked}" Header="Audios" Grid.Row="1" Grid.Column="0">
-            <ListView AllowDrop="True" BorderThickness="0"
+            <GroupBox IsEnabled="{Binding UiUnLocked}" Header="Audios" Grid.Row="1" Grid.Column="0">
+                <ListView AllowDrop="True" BorderThickness="0"
                   ItemsSource="{Binding FilteredAudiosCollection}">
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="Drop">
-                        <cmd:EventToCommand Command="{Binding DropAudioCommand}" PassEventArgsToCommand="True" />
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
-                <ListView.ItemTemplate>
-                    <DataTemplate DataType="{x:Type model:Audio}">
-                        <Grid Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type Controls:MetroWindow}}}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200" />
-                                <ColumnDefinition Width="1*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="50" />
-                            </Grid.RowDefinitions>
-                            <StackPanel Grid.Column="0" Grid.Row="0">
-                                <DockPanel>
-                                    <icons:PackIconBoxIcons ToolTip="Playing Now" Kind="SolidVolumeFull" Width="15" Height="15" HorizontalAlignment="Center" Margin="0 0 5 0"
+                    <i:Interaction.Triggers>
+                        <i:EventTrigger EventName="Drop">
+                            <cmd:EventToCommand Command="{Binding DropAudioCommand}" PassEventArgsToCommand="True" />
+                        </i:EventTrigger>
+                    </i:Interaction.Triggers>
+                    <ListView.ItemTemplate>
+                        <DataTemplate DataType="{x:Type model:Audio}">
+                            <Grid Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type Controls:MetroWindow}}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="50" />
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Column="0" Grid.Row="0">
+                                    <DockPanel>
+                                        <icons:PackIconBoxIcons ToolTip="Playing Now" Kind="SolidVolumeFull" Width="15" Height="15" HorizontalAlignment="Center" Margin="0 0 5 0"
                                                             Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisibleOrCollapsed}}"
                                                             Foreground="Cyan" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding Name}" Height="25" FontSize="17" FontWeight="SemiBold" ToolTip="{Binding Name}" TextTrimming="WordEllipsis" VerticalAlignment="Top" />
-                                </DockPanel>
-                                <TextBlock Text="{Binding FilePath}" Height="25" FontSize="12" FontWeight="Light" ToolTip="{Binding FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
-                            </StackPanel>
-                            <Button Grid.Column="1" Grid.Row="0" Content="Play" CommandParameter="{Binding}" Command="{Binding DataContext.PeviewAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
-                            <Grid.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="Play" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.PeviewAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
-                                    <MenuItem Header="Add" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.AddAudioToScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
-                                    <MenuItem Header="Remove" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.RemoveAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
-                                    <MenuItem Header="Stop Play" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.StopPlayingScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
-                                </ContextMenu>
-                            </Grid.ContextMenu>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </GroupBox>
+                                        <TextBlock Text="{Binding Name}" Height="25" FontSize="17" FontWeight="SemiBold" ToolTip="{Binding Name}" TextTrimming="WordEllipsis" VerticalAlignment="Top" />
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding FilePath}" Height="25" FontSize="12" FontWeight="Light" ToolTip="{Binding FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Grid.Row="0" Content="Play" CommandParameter="{Binding}" Command="{Binding DataContext.PeviewAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
+                                <Grid.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Play" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.PeviewAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Add" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.AddAudioToScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Remove" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.RemoveAudioCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Stop Play" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.StopPlayingScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
+                                    </ContextMenu>
+                                </Grid.ContextMenu>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </GroupBox>
 
-        <GroupBox IsEnabled="{Binding UiUnLocked}" Margin="3 0 0 0" Header="Schedule" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
-            <ListView ItemsSource="{Binding Schedules}" BorderThickness="0">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Margin="0 5" Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type Controls:MetroWindow}}}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="250"/>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="50" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="60" />
-                            </Grid.RowDefinitions>
-                            <StackPanel Grid.Column="0" Grid.Row="0">
-                                <DockPanel>
-                                    <icons:PackIconBoxIcons ToolTip="Playing Now" Kind="SolidVolumeFull" Width="15" Height="15" HorizontalAlignment="Center" Margin="0 0 5 0"
+            <GroupBox IsEnabled="{Binding UiUnLocked}" Margin="3 0 0 0" Header="Schedule" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
+                <ListView ItemsSource="{Binding Schedules}" BorderThickness="0">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0 5" Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type Controls:MetroWindow}}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="250"/>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="50" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="60" />
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Column="0" Grid.Row="0">
+                                    <DockPanel>
+                                        <icons:PackIconBoxIcons ToolTip="Playing Now" Kind="SolidVolumeFull" Width="15" Height="15" HorizontalAlignment="Center" Margin="0 0 5 0"
                                                             Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisibleOrCollapsed}}"
                                                             Foreground="Cyan" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding Audio.Name}" Height="25" HorizontalAlignment="Left" FontSize="17" Margin="0 0 0 0" FontWeight="SemiBold" ToolTip="{Binding Audio.Name}" TextTrimming="CharacterEllipsis"  VerticalAlignment="Bottom" />
-                                </DockPanel>
-                                <TextBlock Text="{Binding Audio.FilePath}" Height="15" FontSize="12" FontWeight="Light" ToolTip="{Binding Audio.FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
-                                <DockPanel>
-                                    <TextBlock Foreground="DarkGray"
+                                        <TextBlock Text="{Binding Audio.Name}" Height="25" HorizontalAlignment="Left" FontSize="17" Margin="0 0 0 0" FontWeight="SemiBold" ToolTip="{Binding Audio.Name}" TextTrimming="CharacterEllipsis"  VerticalAlignment="Bottom" />
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding Audio.FilePath}" Height="15" FontSize="12" FontWeight="Light" ToolTip="{Binding Audio.FilePath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Bottom" TextWrapping="NoWrap" />
+                                    <DockPanel>
+                                        <TextBlock Foreground="DarkGray"
                                         HorizontalAlignment="Left" VerticalAlignment="Center" 
                                         Text="{Binding NextFire, Converter={StaticResource TimeSpanConverter}}" />
-                                    <Label Foreground="Cyan" HorizontalAlignment="Right" HorizontalContentAlignment="Right" 
+                                        <Label Foreground="Cyan" HorizontalAlignment="Right" HorizontalContentAlignment="Right" 
                                            VerticalAlignment="Center" VerticalContentAlignment="Center">
-                                        <Label.Style>
-                                            <Style TargetType="{x:Type Label}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Value="True">
-                                                        <Setter Property="Content" Value="active"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Value="False">
-                                                        <Setter Property="Content" Value="stopped"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Label.Style>
-                                    </Label>
-                                </DockPanel>
-                            </StackPanel>
-                            <StackPanel Margin="0 0 10 0" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Right">
-                                <WrapPanel Height="30" Orientation="Horizontal" VerticalAlignment="Top">
-                                    <TextBlock Text="Start in" VerticalAlignment="Center" />
-                                    <ComboBox ItemsSource="{Binding Source={StaticResource dayEnum}}" Margin="5 0" Width="125" SelectedItem="{Binding DayEnum, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
-                                    <TextBlock Text=" at " VerticalAlignment="Center" />
-                                    <Grid x:Name="LayoutRoot" Width="Auto" Height="Auto">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="0.2*"/>
-                                            <ColumnDefinition Width="0.05*"/>
-                                            <ColumnDefinition Width="0.2*"/>
-                                            <ColumnDefinition Width="0.05*"/>
-                                            <ColumnDefinition Width="0.2*"/>
-                                        </Grid.ColumnDefinitions>
+                                            <Label.Style>
+                                                <Style TargetType="{x:Type Label}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Value="True">
+                                                            <Setter Property="Content" Value="active"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Value="False">
+                                                            <Setter Property="Content" Value="stopped"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Label.Style>
+                                        </Label>
+                                    </DockPanel>
+                                </StackPanel>
+                                <StackPanel Margin="0 0 10 0" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Right">
+                                    <WrapPanel Height="30" Orientation="Horizontal" VerticalAlignment="Top">
+                                        <TextBlock Text="Start in" VerticalAlignment="Center" />
+                                        <ComboBox ItemsSource="{Binding Source={StaticResource dayEnum}}" Margin="5 0" Width="125" SelectedItem="{Binding DayEnum, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                                        <TextBlock Text=" at " VerticalAlignment="Center" />
+                                        <Grid x:Name="LayoutRoot" Width="Auto" Height="Auto">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="0.2*"/>
+                                                <ColumnDefinition Width="0.05*"/>
+                                                <ColumnDefinition Width="0.2*"/>
+                                                <ColumnDefinition Width="0.05*"/>
+                                                <ColumnDefinition Width="0.2*"/>
+                                            </Grid.ColumnDefinitions>
 
-                                        <Grid x:Name="hour" Focusable="True">
-                                            <TextBox Width="30" TextWrapping="Wrap" Text="{Binding Hours}"
+                                            <Grid x:Name="hour" Focusable="True">
+                                                <TextBox Width="30" TextWrapping="Wrap" Text="{Binding Hours}"
                                                      TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
-                                        </Grid>
+                                            </Grid>
 
-                                        <Grid Grid.Column="1">
-                                            <TextBlock Width="10" TextWrapping="Wrap" VerticalAlignment="Center" Background="{x:Null}" FontFamily="Goudy Stout"
+                                            <Grid Grid.Column="1">
+                                                <TextBlock Width="10" TextWrapping="Wrap" VerticalAlignment="Center" Background="{x:Null}" FontFamily="Goudy Stout"
                                                        FontSize="14" Text=":" TextAlignment="Center"/>
-                                        </Grid>
+                                            </Grid>
 
-                                        <Grid Grid.Column="2" Focusable="True">
-                                            <TextBox Width="30" x:Name="ddTxt"  TextWrapping="Wrap" Text="{Binding Minutes}" TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
-                                        </Grid>
+                                            <Grid Grid.Column="2" Focusable="True">
+                                                <TextBox Width="30" x:Name="ddTxt"  TextWrapping="Wrap" Text="{Binding Minutes}" TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+                                            </Grid>
 
-                                        <Grid Grid.Column="3">
-                                            <TextBlock Width="10" TextWrapping="Wrap" VerticalAlignment="Center" Background="{x:Null}" FontFamily="Goudy Stout" FontSize="14" Text=":" TextAlignment="Center"/>
-                                        </Grid>
+                                            <Grid Grid.Column="3">
+                                                <TextBlock Width="10" TextWrapping="Wrap" VerticalAlignment="Center" Background="{x:Null}" FontFamily="Goudy Stout" FontSize="14" Text=":" TextAlignment="Center"/>
+                                            </Grid>
 
-                                        <Grid Grid.Column="4" Focusable="True">
-                                            <TextBox Width="30" x:Name="yyTxt"  TextWrapping="Wrap" Text="{Binding Seconds}" TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+                                            <Grid Grid.Column="4" Focusable="True">
+                                                <TextBox Width="30" x:Name="yyTxt"  TextWrapping="Wrap" Text="{Binding Seconds}" TextAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+                                            </Grid>
                                         </Grid>
-                                    </Grid>
-                                </WrapPanel>
-                                <WrapPanel Height="30" Orientation="Horizontal" VerticalAlignment="Bottom" >
-                                    <TextBlock Visibility="{Binding Repeatedly, Converter={StaticResource BoolToVisibleOrCollapsed}}" Margin="0 0 5 0" Text="repeat every" VerticalAlignment="Center" />
-                                    <TextBox Visibility="{Binding Repeatedly, Converter={StaticResource BoolToVisibleOrCollapsed}}" Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5 0" Width="30"/>
-                                    <ComboBox Visibility="{Binding Repeatedly, Converter={StaticResource BoolToVisibleOrCollapsed}}" ItemsSource="{Binding Source={StaticResource intervalEnum}}" Margin="5 0" Width="103" SelectedItem="{Binding IntervalEnum, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
-                                    <CheckBox Content="Repeated" IsChecked="{Binding Repeatedly}" HorizontalAlignment="Right" />
-                                </WrapPanel>
-                            </StackPanel>
-                            <Button Grid.Column="2" Grid.Row="0" Content="Start" Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVisibilityConverter}}" CommandParameter="{Binding}" Command="{Binding DataContext.StartScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
-                            <Button Grid.Column="2" Grid.Row="0" Content="Stop" Background="Black" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibleOrCollapsed}}" CommandParameter="{Binding}" Command="{Binding DataContext.StopScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
-                            <Grid.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="Save" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.SaveScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
-                                    <MenuItem Header="Remove" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.RemoveScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
-                                    <MenuItem Header="Play" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.PlayScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
-                                </ContextMenu>
-                            </Grid.ContextMenu>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </GroupBox>
+                                    </WrapPanel>
+                                    <WrapPanel Height="30" Orientation="Horizontal" VerticalAlignment="Bottom" >
+                                        <TextBlock Visibility="{Binding Repeatedly, Converter={StaticResource BoolToVisibleOrCollapsed}}" Margin="0 0 5 0" Text="repeat every" VerticalAlignment="Center" />
+                                        <TextBox Visibility="{Binding Repeatedly, Converter={StaticResource BoolToVisibleOrCollapsed}}" Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5 0" Width="30"/>
+                                        <ComboBox Visibility="{Binding Repeatedly, Converter={StaticResource BoolToVisibleOrCollapsed}}" ItemsSource="{Binding Source={StaticResource intervalEnum}}" Margin="5 0" Width="103" SelectedItem="{Binding IntervalEnum, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                                        <CheckBox Content="Repeated" IsChecked="{Binding Repeatedly}" HorizontalAlignment="Right" />
+                                    </WrapPanel>
+                                </StackPanel>
+                                <Button Grid.Column="2" Grid.Row="0" Content="Start" Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVisibilityConverter}}" CommandParameter="{Binding}" Command="{Binding DataContext.StartScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
+                                <Button Grid.Column="2" Grid.Row="0" Content="Stop" Background="Black" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibleOrCollapsed}}" CommandParameter="{Binding}" Command="{Binding DataContext.StopScheduledPlaybackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Controls:MetroWindow}}}" />
+                                <Grid.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Save" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.SaveScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Remove" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.RemoveScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Play" CommandParameter="{Binding}" Command="{Binding PlacementTarget.Tag.DataContext.PlayScheduleCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}}" />
+                                    </ContextMenu>
+                                </Grid.ContextMenu>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </GroupBox>
 
-        <GroupBox Margin="3 0 0 0" Header="Music Player Configs" Grid.Row="0" Grid.RowSpan="2" Grid.Column="2">
-            <StackPanel>
-                <StackPanel Margin="0 0 0 20" Visibility="{Binding UiUnLocked, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                    <TextBlock Text="UI Unlock Password" />
-                    <TextBox Text="{Binding UIUnlockPassword, UpdateSourceTrigger=PropertyChanged}" />
+            <GroupBox Margin="3 0 0 0" Header="Music Player Configs" Grid.Row="0" Grid.RowSpan="2" Grid.Column="2">
+                <StackPanel>
+                    <StackPanel IsEnabled="{Binding UiUnLocked}">
+                        <TextBlock Text="Target Music Player Name" />
+                        <TextBox Text="{Binding AppName, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock Text="{Binding SuccessMessage}" TextAlignment="Center" Margin="0 10 0 0" TextWrapping="Wrap" Foreground="Green"  HorizontalAlignment="Center" VerticalAlignment="Top" />
+                        <TextBlock Text="{Binding ErrorMessage}" TextAlignment="Center" Margin="0 -10 0 0" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Center" VerticalAlignment="Top" />
+
+                        <TextBlock Text="Master Volume" Margin="0 10 0 0" />
+                        <WrapPanel>
+                            <Slider Width="205" Minimum="0" Maximum="100"  Value="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                            <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="15 0 0 0" Width="35" Text="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                        </WrapPanel>
+
+                        <TextBlock Text="Fading Smooth" Margin="0 10 0 0" ToolTip="0 - Fast, 35 - Slow" />
+                        <WrapPanel ToolTip="0 - Fast, 35 - Slow">
+                            <Slider Width="205" Minimum="0" Maximum="35" Value="{Binding FadingSpeed, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                            <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="15 0 0 0" Width="35" Text="{Binding FadingSpeed, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                        </WrapPanel>
+
+                        <Button Content="Connect" Margin="15" 
+                                IsEnabled="{Binding IsConnectSuccess, Converter={StaticResource InverseBoolConverter}}"
+                                Command="{Binding ConnectToAppCommnd}"/>
+                        <Button Visibility="Hidden" VerticalAlignment="Bottom" Content="Save app name and volume" Margin="15" Command="{Binding SaveCommandCommnd}"/>
+                    </StackPanel>
+                    <Button Content="Login" Width="50"
+                            Visibility="{Binding UiUnLocked, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                            FontStyle="Italic" Command="{Binding SkipPasswordCommand}" />
                 </StackPanel>
-                <StackPanel IsEnabled="{Binding UiUnLocked}">
-                    <TextBlock Text="Target Music Player Name" />
-                    <TextBox Text="{Binding AppName, UpdateSourceTrigger=PropertyChanged}" />
-
-                    <TextBlock Text="{Binding SuccessMessage}" TextAlignment="Center" Margin="0 10 0 0" TextWrapping="Wrap" Foreground="Green"  HorizontalAlignment="Center" VerticalAlignment="Top" />
-                    <TextBlock Text="{Binding ErrorMessage}" TextAlignment="Center" Margin="0 -10 0 0" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Center" VerticalAlignment="Top" />
-
-                    <TextBlock Text="Master Volume" Margin="0 10 0 0" />
-                    <WrapPanel>
-                        <Slider Width="205" Minimum="0" Maximum="100"  Value="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
-                        <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="15 0 0 0" Width="35" Text="{Binding TargetVolunme, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
-                    </WrapPanel>
-
-                    <TextBlock Text="Fading Smooth" Margin="0 10 0 0" ToolTip="0 - Fast, 35 - Slow" />
-                    <WrapPanel ToolTip="0 - Fast, 35 - Slow">
-                        <Slider Width="205" Minimum="0" Maximum="35" Value="{Binding FadingSpeed, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
-                        <TextBox VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="15 0 0 0" Width="35" Text="{Binding FadingSpeed, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
-                    </WrapPanel>
-
-                    <Button Content="Connect" Margin="15" 
-                        IsEnabled="{Binding IsConnectSuccess, Converter={StaticResource InverseBoolConverter}}"
-                        Command="{Binding ConnectToAppCommnd}"/>
-                    <Button Visibility="Hidden" VerticalAlignment="Bottom" Content="Save app name and volume" Margin="15" Command="{Binding SaveCommandCommnd}"/>
-                </StackPanel>
-            </StackPanel>
-        </GroupBox>
+            </GroupBox>
+        </Grid>
     </Grid>
 </Controls:MetroWindow>

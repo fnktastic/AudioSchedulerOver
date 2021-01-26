@@ -13,6 +13,8 @@ namespace AudioSchedulerOver.Model
         public string Name { get; set; }
         public string Metadata { get; set; }
         public bool IsActive { get; set; }
+        //meaning: if true -> load shared settings
+        //         if false -> load private settings 
         public bool IsOnline { get; set; }
         public DateTime LatestLoginAt { get; set; }
         public List<Schedule> Schedules { get; set; }

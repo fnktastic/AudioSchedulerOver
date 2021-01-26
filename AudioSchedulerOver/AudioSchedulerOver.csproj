@@ -209,6 +209,7 @@
     <Compile Include="Converters\InverseBoolToVisibilityConverter.cs" />
     <Compile Include="Converters\TimeSpanConverter.cs" />
     <Compile Include="DataAccess\DataContext.cs" />
+    <Compile Include="DataAccess\DataContextFactory.cs" />
     <Compile Include="Enum\IntervalEnum.cs" />
     <Compile Include="Exceptions\StationInactiveException.cs" />
     <Compile Include="Helper\MachineIdGenerator.cs" />

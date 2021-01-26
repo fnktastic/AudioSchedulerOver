@@ -18,18 +18,20 @@ namespace AudioSchedulerOver.Repository
 
     public class MachineRepository : IMachineRepository
     {
-        private readonly Context _context;
+        private readonly IDataContextFactory _dataContextFactory;
 
-        public MachineRepository(Context context)
+        private Context context => _dataContextFactory.Instance;
+
+        public MachineRepository(IDataContextFactory dataContextFactory)
         {
-            _context = context;
+            _dataContextFactory = dataContextFactory;
         }
 
         public async Task<Machine> SignIn(string machineId, string name)
         {
             try
             {
-                var machine = await _context.Machines.FindAsync(machineId);
+                var machine = await context.Machines.FindAsync(machineId);
 
                 if (machine != null)
                 {
@@ -37,7 +39,7 @@ namespace AudioSchedulerOver.Repository
 
                     machine.LatestLoginAt = DateTime.UtcNow;
 
-                    await _context.SaveChangesAsync();
+                    await context.SaveChangesAsync();
 
                     return machine;
                 }
@@ -47,13 +49,13 @@ namespace AudioSchedulerOver.Repository
                     Id = machineId,
                     Name = name,
                     IsActive = true,
-                    IsOnline = true,
+                    IsOnline = false,
                     LatestLoginAt = DateTime.UtcNow
                 };
 
-                _context.Machines.Add(newMachine);
+                context.Machines.Add(newMachine);
 
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
 
                 return newMachine;
             }

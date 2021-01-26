@@ -5,6 +5,7 @@ using AudioSchedulerOver.Repository;
 using CommonServiceLocator;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
+using System;
 
 namespace AudioSchedulerOver.ViewModel
 {
@@ -16,7 +17,7 @@ namespace AudioSchedulerOver.ViewModel
 
             SimpleIoc.Default.Register<MainViewModel>();
 
-            SimpleIoc.Default.Register<Context>();
+            SimpleIoc.Default.Register<IDataContextFactory, DataContextFactory>();
 
             SimpleIoc.Default.Register<ISerialQueue, SerialQueue>();
 
@@ -33,7 +34,7 @@ namespace AudioSchedulerOver.ViewModel
                 return ServiceLocator.Current.GetInstance<MainViewModel>();
             }
         }
-        
+
         public static void Cleanup()
         {
             // TODO Clear the ViewModels

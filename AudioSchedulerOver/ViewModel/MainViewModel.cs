@@ -151,6 +151,7 @@ namespace AudioSchedulerOver.ViewModel
                     if (_uiUnlockPassword == uiUnlockPassword)
                     {
                         UiUnLocked = true;
+                        PasswordScreen = true;
                         UIUnlockPassword = string.Empty;
                     }
             }
@@ -164,6 +165,17 @@ namespace AudioSchedulerOver.ViewModel
             {
                 _uiUnLocked = value;
                 RaisePropertyChanged(nameof(UiUnLocked));
+            }
+        }
+
+        private bool _passwordScreen;
+        public bool PasswordScreen
+        {
+            get { return _passwordScreen; }
+            set
+            {
+                _passwordScreen = value;
+                RaisePropertyChanged(nameof(PasswordScreen));
             }
         }
 
@@ -234,6 +246,7 @@ namespace AudioSchedulerOver.ViewModel
 
         public MainViewModel(IAudioRepository audioRepository, IScheduleRepository scheduleRepository, IMachineRepository machineRepository, ISettingRepository settingRepository, ISerialQueue serialQueue)
         {
+            var mediaPlayer = new MediaPlayer();
             if (File.Exists(STARTUP_CONFIGS))
             {
                 var confs = File.ReadAllLines(STARTUP_CONFIGS);
@@ -246,11 +259,7 @@ namespace AudioSchedulerOver.ViewModel
             _settingRepository = settingRepository;
             _machineRepository = machineRepository;
             _serialQueue = serialQueue;
-
-            var mediaPlayer = new MediaPlayer();
-
             _playerService = new PlayerService(mediaPlayer);
-
             _audioPlaybackScheduler = new AudioPlaybackScheduler();
 
             _uiTimer = new Timer()
@@ -258,6 +267,11 @@ namespace AudioSchedulerOver.ViewModel
                 Interval = DEFAULT_COUNTDOWN_UPDATE_MSEC
             };
 
+            Startup();
+        }
+
+        private void Startup()
+        {
             _uiTimer.Elapsed += uiTimer_Tick;
 
             Task.WhenAll(Init(true));
@@ -268,20 +282,6 @@ namespace AudioSchedulerOver.ViewModel
             isAutoRunFired = false;
 
             await _serialQueue.Enqueue(async () => await _settingRepository.Init());
-
-            var audios = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).Select(x => x.ConvertToAudioViewModel());
-            var schedules = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync(/*MachineIdGenerator.Get*/))).Select(x => x.ConvertToScheduleViewModel());
-
-
-            Audios = new ObservableCollection<AudioViewModel>(audios);
-            Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
-
-            TargetVolunme = int.Parse(await GetSetting("tagetVolume"));
-            AppName = await GetSetting("appName");
-            FadingSpeed = int.Parse(await GetSetting("fadingSpeed"));
-
-            FilteredAudiosCollection = GetAudiosCollectionView(_audios);
-            FilteredAudiosCollection.Filter += FilteredAudioCollection_Filter;
 
             try
             {
@@ -295,6 +295,30 @@ namespace AudioSchedulerOver.ViewModel
             {
                 Application.Current.Shutdown(-1);
             }
+
+            List<Schedule> schedulesDto = null;
+
+            if (_machine.IsOnline)
+            {
+                schedulesDto = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync(MachineIdGenerator.Get))).ToList();
+            }
+            else
+            {
+                schedulesDto = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync())).ToList();
+            }
+
+            var audios = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).Select(x => x.ConvertToAudioViewModel());
+            var schedules = schedulesDto.Select(x => x.ConvertToScheduleViewModel());
+
+            Audios = new ObservableCollection<AudioViewModel>(audios);
+            Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
+
+            TargetVolunme = int.Parse(await GetSetting("tagetVolume"));
+            AppName = await GetSetting("appName");
+            FadingSpeed = int.Parse(await GetSetting("fadingSpeed"));
+
+            FilteredAudiosCollection = GetAudiosCollectionView(_audios);
+            FilteredAudiosCollection.Filter += FilteredAudioCollection_Filter;
 
             InitTimers(onStartup);
         }
@@ -346,9 +370,10 @@ namespace AudioSchedulerOver.ViewModel
 
                         await Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(async () =>
                         {
+                            DisableSchedules();
+
                             await Init().ContinueWith(i =>
                             {
-                                DisableSchedules();
                                 EnableSchedules();
                             });
                         }));
@@ -636,6 +661,14 @@ namespace AudioSchedulerOver.ViewModel
         {
 
         }
+
+        private RelayCommand<object> _skipPasswordCommand;
+        public RelayCommand<object> SkipPasswordCommand => _skipPasswordCommand ?? (_skipPasswordCommand = new RelayCommand<object>(SkipPassword));
+        private void SkipPassword(object e)
+        {
+            PasswordScreen = !_passwordScreen;
+        }
+
 
         private async Task UpdateConfigs()
         {
