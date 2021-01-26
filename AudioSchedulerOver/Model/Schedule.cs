@@ -16,6 +16,8 @@ namespace AudioSchedulerOver.Model
 
         public DayOfWeek DayEnum { get; set; }
 
+        public string Metadata { get; set; }
+
         public int Interval { get; set; }
 
         public long StartDate { get; set; }

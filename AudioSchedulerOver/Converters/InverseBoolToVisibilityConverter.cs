@@ -15,7 +15,7 @@ namespace AudioSchedulerOver.Converters
             bool bValue = (bool)value;
 
             if (bValue == true)
-                return Visibility.Hidden;
+                return Visibility.Collapsed;
             else
                 return Visibility.Visible;
         }

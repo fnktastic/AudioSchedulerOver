@@ -12,5 +12,6 @@ namespace AudioSchedulerOver.Model
         public string Key { get; set; }
         public string Value { get; set; }
         public string MachineId { get; set; }
+        public string Metadata { get; set; }
     }
 }
