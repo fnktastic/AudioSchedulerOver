@@ -43,7 +43,7 @@ namespace AudioSchedulerOver.ViewModel
 
         private const int AUTOCHECK_INTERVAL = 3;
 
-        private readonly double autoReloadInterval = 1;
+        private readonly double autoReloadInterval = 0.5;
 
         private const string STARTUP_CONFIGS = "startupConfigs.txt";
 
@@ -526,8 +526,6 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                scheduleViewModel.MakeDirty();
-
                 AudioViewModel audio = scheduleViewModel.Audio;
                 TimeSpan start = scheduleViewModel.StartDate;
                 int interval = scheduleViewModel.Interval;
@@ -573,8 +571,6 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                scheduleViewModel.MakeDirty();
-
                 _audioPlaybackScheduler.KillSchedule(scheduleViewModel.ScheduleId);
 
                 scheduleViewModel.IsActive = false;
