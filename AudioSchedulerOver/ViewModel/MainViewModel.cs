@@ -329,6 +329,8 @@ namespace AudioSchedulerOver.ViewModel
             AppName = await GetSetting("appName");
             FadingSpeed = int.Parse(await GetSetting("fadingSpeed"));
 
+            _settingDirty = false;
+
             FilteredAudiosCollection = GetAudiosCollectionView(_audios);
             FilteredAudiosCollection.Filter += FilteredAudioCollection_Filter;
 
