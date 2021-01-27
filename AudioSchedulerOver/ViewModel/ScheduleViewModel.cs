@@ -120,7 +120,6 @@ namespace AudioSchedulerOver.ViewModel
                 if (_isActive == value) return;
                 _isActive = value;
                 RaisePropertyChanged(nameof(IsActive));
-                _dirty = true;
             }
         }
 
