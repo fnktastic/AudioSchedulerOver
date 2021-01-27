@@ -36,6 +36,7 @@ namespace AudioSchedulerOver.ViewModel
 
         private ApplicationVolumeProvider _applicationVolumeProvider;
         private readonly Timer _uiTimer;
+        private bool _settingDirty;
 
         private const string APP = "Y.Music";
 
@@ -99,6 +100,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 _targetVolume = value;
                 RaisePropertyChanged(nameof(TargetVolunme));
+                _settingDirty = true;
             }
         }
 
@@ -111,6 +113,7 @@ namespace AudioSchedulerOver.ViewModel
                 _fadingSpeed = value;
                 Fading_Speed = _fadingSpeed;
                 RaisePropertyChanged(nameof(FadingSpeed));
+                _settingDirty = true;
             }
         }
 
@@ -185,6 +188,7 @@ namespace AudioSchedulerOver.ViewModel
             {
                 _appName = value;
                 RaisePropertyChanged(nameof(AppName));
+                _settingDirty = true;
             }
         }
 
@@ -682,9 +686,14 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                await UpdateSetting("appName", _appName);
-                await UpdateSetting("tagetVolume", _targetVolume.ToString());
-                await UpdateSetting("fadingSpeed", FadingSpeed.ToString());
+                if(_settingDirty)
+                {
+                    await UpdateSetting("appName", _appName);
+                    await UpdateSetting("tagetVolume", _targetVolume.ToString());
+                    await UpdateSetting("fadingSpeed", _fadingSpeed.ToString());
+
+                    _settingDirty = false;
+                }
             }
             catch (Exception e)
             {
