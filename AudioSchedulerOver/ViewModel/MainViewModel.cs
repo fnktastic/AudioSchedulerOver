@@ -271,6 +271,8 @@ namespace AudioSchedulerOver.ViewModel
             };
 
             Startup();
+
+            UIUnlockPassword = @"Q'?2\zX4`MTpYD55";
         }
 
         private void Startup()
@@ -617,9 +619,9 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
-        private RelayCommand<Audio> _stopPlayingScheduleCommand;
-        public RelayCommand<Audio> StopPlayingScheduleCommand => _stopPlayingScheduleCommand ?? (_stopPlayingScheduleCommand = new RelayCommand<Audio>(StopPlayingSchedule));
-        private void StopPlayingSchedule(Audio audio)
+        private RelayCommand<AudioViewModel> _stopPlayingScheduleCommand;
+        public RelayCommand<AudioViewModel> StopPlayingScheduleCommand => _stopPlayingScheduleCommand ?? (_stopPlayingScheduleCommand = new RelayCommand<AudioViewModel>(StopPlayingSchedule));
+        private void StopPlayingSchedule(AudioViewModel audio)
         {
             try
             {
