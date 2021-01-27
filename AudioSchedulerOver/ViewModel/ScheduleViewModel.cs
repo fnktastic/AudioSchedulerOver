@@ -120,7 +120,6 @@ namespace AudioSchedulerOver.ViewModel
                 if (_isActive == value) return;
                 _isActive = value;
                 RaisePropertyChanged(nameof(IsActive));
-                _dirty = true;
             }
         }
 
@@ -133,7 +132,6 @@ namespace AudioSchedulerOver.ViewModel
                 if (_isPlaying == value) return;
                 _isPlaying = value;
                 RaisePropertyChanged(nameof(IsPlaying));
-                _dirty = true;
             }
         }
 
@@ -163,6 +161,16 @@ namespace AudioSchedulerOver.ViewModel
         }
 
         private bool _dirty;
+        /*private bool d;
+        public bool _dirty
+        {
+            get { return d; }
+            set
+            {
+                if (d == value) return;
+                d = value;
+            }
+        }*/
         public bool IsDirty => _dirty;
         public void CleanObject() => _dirty = false;
 
