@@ -21,6 +21,8 @@ namespace AudioSchedulerOver.Service
 
         public IPlayable Playable => _playable;
 
+        public bool IsPlaying => _playable == null ? false : _playable.IsPlaying ? true : false;
+
         public PlayerService(MediaPlayer mediaPlayer)
         {
             _mediaPlayer = mediaPlayer;

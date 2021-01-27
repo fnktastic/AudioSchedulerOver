@@ -314,7 +314,7 @@ namespace AudioSchedulerOver.ViewModel
             }
 
             var audios = audioDto.Select(x => x.ConvertToAudioViewModel());
-            var schedules = schedulesDto.Select(x => 
+            var schedules = schedulesDto.Select(x =>
             {
                 var entry = _schedules.FirstOrDefault(y => y.ScheduleId == x.Id);
 
@@ -370,7 +370,10 @@ namespace AudioSchedulerOver.ViewModel
                 {
                     while (true)
                     {
-                        EstablishConnection();
+                        if (_playerService.IsPlaying == false)
+                        {
+                            EstablishConnection();
+                        }
 
                         await Task.Delay(TimeSpan.FromSeconds(AUTOCHECK_INTERVAL));
                     }
@@ -380,19 +383,22 @@ namespace AudioSchedulerOver.ViewModel
                 {
                     while (true)
                     {
-                        await SaveData();
-
-                        await UpdateConfigs();
-
-                        await Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(async () =>
+                        if (_playerService.IsPlaying == false)
                         {
-                            DisableSchedules();
+                            await SaveData();
 
-                            await Init().ContinueWith(i =>
+                            await UpdateConfigs();
+
+                            await Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(async () =>
                             {
-                                EnableSchedules();
-                            });
-                        }));
+                                DisableSchedules();
+
+                                await Init().ContinueWith(i =>
+                                {
+                                    EnableSchedules();
+                                });
+                            }));
+                        }
 
                         await Task.Delay(TimeSpan.FromMinutes(autoReloadInterval));
                     }
@@ -690,7 +696,7 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
-                if(_settingDirty)
+                if (_settingDirty)
                 {
                     await UpdateSetting("appName", _appName);
                     await UpdateSetting("tagetVolume", _targetVolume.ToString());
