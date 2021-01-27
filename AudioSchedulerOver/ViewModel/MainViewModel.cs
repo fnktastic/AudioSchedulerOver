@@ -272,7 +272,7 @@ namespace AudioSchedulerOver.ViewModel
 
             Startup();
 
-            UIUnlockPassword = @"Q'?2\zX4`MTpYD55";
+            //UIUnlockPassword = @"Q'?2\zX4`MTpYD55";
         }
 
         private void Startup()
