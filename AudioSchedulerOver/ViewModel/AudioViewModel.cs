@@ -26,6 +26,8 @@ namespace AudioSchedulerOver.ViewModel
             }
         }
 
+        public string Path => FilePath;
+
         public Audio ConvertToAudio()
         {
             return new Audio()

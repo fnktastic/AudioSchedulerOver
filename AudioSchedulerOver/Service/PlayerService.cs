@@ -5,6 +5,7 @@ using AudioSchedulerOver.ViewModel;
 using AudioSession;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -41,6 +42,17 @@ namespace AudioSchedulerOver.Service
 
         public void EnablePlaying(IPlayable playable = null)
         {
+            if (playable == null && _playable == null) return;
+
+            if (playable == null && _playable != null)
+            {
+                _playable.IsPlaying = false;
+                return;
+            }
+
+            if (string.IsNullOrEmpty(playable.Path) || File.Exists(playable.Path) == false)
+                throw new FileNotFoundException();
+
             if (_playable != null)
             {
                 _playable.IsPlaying = false;
@@ -108,9 +120,19 @@ namespace AudioSchedulerOver.Service
 
         public void Pause()
         {
-            _mediaPlayer.Pause();
+            try
+            {
+                _mediaPlayer.Pause();
 
-            EnablePlaying(null);
+                if (ApplicationVolumeProvider != null)
+                    Task.WhenAll(ApplicationVolumeProvider.SetApplicationVolume(100, MainViewModel.Fading_Speed)).ConfigureAwait(false);
+
+                EnablePlaying(null);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.Error(string.Format("Application exception {0} {1} {2}", ex.Message, ex.StackTrace, ex.Data));
+            }
         }
 
         private void _mediaPlayer_MediaEnded(object sender, EventArgs e)

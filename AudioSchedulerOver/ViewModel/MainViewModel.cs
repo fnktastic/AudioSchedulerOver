@@ -284,59 +284,66 @@ namespace AudioSchedulerOver.ViewModel
 
         private async Task Init(bool onStartup = false)
         {
-            isAutoRunFired = false;
-
-            if (loggedIn == false)
-                await _serialQueue.Enqueue(async () => await _settingRepository.Init());
-
-            List<Schedule> schedulesDto = null;
-            List<Audio> audioDto = null;
-
-            audioDto = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).ToList();
-
             try
             {
-                Machine = await _serialQueue.Enqueue(async () => await _machineRepository.SignIn(MachineIdGenerator.Get, MachineIdGenerator.Name));
-                loggedIn = true;
+                isAutoRunFired = false;
+
+                if (loggedIn == false)
+                    await _serialQueue.Enqueue(async () => await _settingRepository.Init());
+
+                List<Schedule> schedulesDto = null;
+                List<Audio> audioDto = null;
+
+                audioDto = (await _serialQueue.Enqueue(async () => await _audioRepository.GetAllAsync())).ToList();
+
+                try
+                {
+                    Machine = await _serialQueue.Enqueue(async () => await _machineRepository.SignIn(MachineIdGenerator.Get, MachineIdGenerator.Name));
+                    loggedIn = true;
+                }
+                catch (StationInactiveException)
+                {
+                    Application.Current.Shutdown(-1);
+                }
+
+                if (_machine != null &&_machine.IsOnline)
+                {
+                    schedulesDto = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync(MachineIdGenerator.Get))).ToList();
+                }
+                else
+                {
+                    schedulesDto = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync())).ToList();
+                }
+
+                var audios = audioDto.Select(x => x.ConvertToAudioViewModel());
+                var schedules = schedulesDto.Select(x =>
+                {
+                    var entry = _schedules.FirstOrDefault(y => y.ScheduleId == x.Id);
+
+                    if (entry != null && entry.IsDirty)
+                        return entry;
+
+                    return x.ConvertToScheduleViewModel();
+                });
+
+                Audios = new ObservableCollection<AudioViewModel>(audios);
+                Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
+
+                TargetVolunme = int.Parse(await GetSetting("tagetVolume"));
+                AppName = await GetSetting("appName");
+                FadingSpeed = int.Parse(await GetSetting("fadingSpeed"));
+
+                _settingDirty = false;
+
+                FilteredAudiosCollection = GetAudiosCollectionView(_audios);
+                FilteredAudiosCollection.Filter += FilteredAudioCollection_Filter;
+
+                InitTimers(onStartup);
             }
-            catch (StationInactiveException)
+            catch(Exception ex)
             {
-                Application.Current.Shutdown(-1);
+                Logger.Log.Error(string.Format("Init exception {0} {1} {2}", ex.Message, ex.StackTrace, ex.Data));
             }
-
-            if (_machine.IsOnline)
-            {
-                schedulesDto = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync(MachineIdGenerator.Get))).ToList();
-            }
-            else
-            {
-                schedulesDto = (await _serialQueue.Enqueue(async () => await _scheduleRepository.GetAllAsync())).ToList();
-            }
-
-            var audios = audioDto.Select(x => x.ConvertToAudioViewModel());
-            var schedules = schedulesDto.Select(x =>
-            {
-                var entry = _schedules.FirstOrDefault(y => y.ScheduleId == x.Id);
-
-                if (entry != null && entry.IsDirty)
-                    return entry;
-
-                return x.ConvertToScheduleViewModel();
-            });
-
-            Audios = new ObservableCollection<AudioViewModel>(audios);
-            Schedules = new ObservableCollection<ScheduleViewModel>(schedules);
-
-            TargetVolunme = int.Parse(await GetSetting("tagetVolume"));
-            AppName = await GetSetting("appName");
-            FadingSpeed = int.Parse(await GetSetting("fadingSpeed"));
-
-            _settingDirty = false;
-
-            FilteredAudiosCollection = GetAudiosCollectionView(_audios);
-            FilteredAudiosCollection.Filter += FilteredAudioCollection_Filter;
-
-            InitTimers(onStartup);
         }
 
         private void uiTimer_Tick(object sender, EventArgs e)
@@ -500,6 +507,14 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
+                var schedules = _schedules.Where(x => x.Audio.Id == audio.Id).ToList();
+
+                foreach (var schedule in schedules)
+                {
+                    _audioPlaybackScheduler.KillSchedule(schedule.ScheduleId);
+                    schedule.IsActive = false;
+                }
+
                 _audios.Remove(audio);
 
                 await _serialQueue.Enqueue(async () => await _audioRepository.RemoveAsync(audio.ConvertToAudio()));
@@ -553,6 +568,8 @@ namespace AudioSchedulerOver.ViewModel
                     {
                         try
                         {
+                            if (File.Exists(scheduleViewModel.Path) == false) return;
+
                             var t = Task.Factory.StartNew(async () =>
                             {
                                 await _applicationVolumeProvider.SetApplicationVolume(_targetVolume, _fadingSpeed);
@@ -615,6 +632,10 @@ namespace AudioSchedulerOver.ViewModel
         {
             try
             {
+                _audioPlaybackScheduler.KillSchedule(scheduleViewModel.ScheduleId);
+
+                scheduleViewModel.IsActive = false;
+
                 Schedules.Remove(scheduleViewModel);
 
                 await _serialQueue.Enqueue(async () => await _scheduleRepository.RemoveAsync(scheduleViewModel.ConvertToSchedule()));

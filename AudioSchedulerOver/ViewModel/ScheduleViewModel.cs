@@ -173,6 +173,9 @@ namespace AudioSchedulerOver.ViewModel
             }
         }*/
         public bool IsDirty => _dirty;
+
+        public string Path => Audio != null ? Audio.FilePath : string.Empty;
+
         public void CleanObject() => _dirty = false;
 
         public Schedule ConvertToSchedule()

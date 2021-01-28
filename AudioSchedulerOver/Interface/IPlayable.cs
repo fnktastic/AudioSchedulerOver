@@ -9,5 +9,6 @@ namespace AudioSchedulerOver.Interface
     public interface IPlayable
     {
         bool IsPlaying { get; set; }
+        string Path { get; }
     }
 }
